@@ -56,6 +56,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { userApi, followApi } from '../services/api'
+import { getAvatarUrl, getAvatarInitials } from '../utils/avatarUtils'
 import Header from '../components/Header.vue'
 
 const router = useRouter()
@@ -179,21 +180,10 @@ const handleAvatarChange = async (event) => {
   event.target.value = ''
 }
 
-// 获取头像URL
-const getAvatarUrl = (avatarUrl) => {
-  if (!avatarUrl) return ''
-  
-  // 如果是base64格式，直接返回
-  if (avatarUrl.startsWith('data:')) {
-    return avatarUrl
-  }
-  
-  // 如果是相对路径，添加后端基础URL
-  if (avatarUrl.startsWith('/')) {
-    return 'https://sad-sarina-yezyeats-d7548659.koyeb.app' + avatarUrl
-  }
-  
-  return avatarUrl
+// 获取组织者首字母
+const getOrganizerInitials = () => {
+  const name = organizer.value?.name || organizer.value?.username || 'Organizer'
+  return getAvatarInitials(name)
 }
 </script>
 

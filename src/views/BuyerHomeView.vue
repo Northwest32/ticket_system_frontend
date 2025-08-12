@@ -12,7 +12,7 @@
                 class="avatar-placeholder"
                 :style="currentUser?.avatarUrl ? { backgroundImage: `url(${getAvatarUrl(currentUser.avatarUrl)})` } : {}"
               >
-                <span v-if="!currentUser?.avatarUrl" class="avatar-text">{{ userInitials }}</span>
+                <span v-if="!currentUser?.avatarUrl" class="avatar-text">{{ getUserInitials() }}</span>
               </div>
               <button class="edit-avatar-button" @click="editAvatar">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -299,6 +299,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { canFollowOrganizers, canBookmarkEvents } from '../utils/permissions'
 import { userApi, orderApi, refundApi, followApi, eventApi, bookmarkApi, commentApi } from '../services/api'
+import { getAvatarUrl, getAvatarInitials } from '../utils/avatarUtils'
 import Header from '../components/Header.vue'
 
 const router = useRouter()
@@ -573,21 +574,10 @@ const handleAvatarChange = async (event) => {
   event.target.value = ''
 }
 
-// 获取头像URL
-const getAvatarUrl = (avatarUrl) => {
-  if (!avatarUrl) return ''
-  
-  // 如果是base64格式，直接返回
-  if (avatarUrl.startsWith('data:')) {
-    return avatarUrl
-  }
-  
-  // 如果是相对路径，添加后端基础URL
-  if (avatarUrl.startsWith('/')) {
-    return 'https://sad-sarina-yezyeats-d7548659.koyeb.app' + avatarUrl
-  }
-  
-  return avatarUrl
+// 获取用户首字母
+const getUserInitials = () => {
+  const name = currentUser.value?.name || currentUser.value?.username || 'User'
+  return getAvatarInitials(name)
 }
 
 // 加载关注列表

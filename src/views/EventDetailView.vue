@@ -208,6 +208,7 @@ import { useAuth } from '../composables/useAuth'
 import { useEvent } from '../composables/useEvent'
 import { canBuyTickets, canBookmarkEvents, canFollowOrganizers, getPermissionMessage } from '../utils/permissions'
 import { followApi, bookmarkApi, commentApi } from '../services/api'
+import { getAvatarUrl, getAvatarInitials } from '../utils/avatarUtils'
 import Header from '../components/Header.vue'
 
 const route = useRoute()
@@ -597,21 +598,10 @@ const formatDate = (dateString) => {
   })
 }
 
-// get avatar URL
-const getAvatarUrl = (avatarUrl) => {
-  if (!avatarUrl) return ''
-  
-  // if base64 format, return directly
-  if (avatarUrl.startsWith('data:')) {
-    return avatarUrl
-  }
-  
-  // if relative path, add backend base URL
-  if (avatarUrl.startsWith('/')) {
-    return 'http://localhost:8080' + avatarUrl
-  }
-  
-  return avatarUrl
+// get organizer initials for avatar placeholder
+const getOrganizerInitials = () => {
+  const name = event.value?.organizerName || event.value?.organizerUsername || 'Organizer'
+  return getAvatarInitials(name)
 }
 </script>
 
