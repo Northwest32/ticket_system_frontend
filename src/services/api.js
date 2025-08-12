@@ -48,11 +48,12 @@ export const userApi = {
   // update user avatar using Cloudinary
   updateAvatar: async (file) => {
     try {
-      // 1) 上传到Cloudinary
+      // 1) upload to Cloudinary
       const { url, publicId } = await uploadAvatar(file);
       
-      // 2) 保存URL到后端 - 使用FormData格式
+      // 2) save URL to backend - using FormData format, including original file
       const formData = new FormData();
+      formData.append('avatar', file); // Add original file to satisfy backend requirement
       formData.append('avatarUrl', url);
       formData.append('publicId', publicId);
       
@@ -60,7 +61,7 @@ export const userApi = {
       
       return response.data;
     } catch (error) {
-      console.error('更新头像失败:', error);
+      console.error('Update avatar failed:', error);
       throw error;
     }
   }
