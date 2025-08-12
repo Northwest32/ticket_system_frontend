@@ -288,16 +288,6 @@ const goBack = () => {
   router.back()
 }
 
-const getOrganizerInitials = () => {
-  const organizerName = event.value?.organizerName || event.value?.organizerUsername
-  if (!organizerName) return 'O'
-  return organizerName
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
 
 const getButtonText = () => {
   if (!event.value) return 'Get Tickets'
