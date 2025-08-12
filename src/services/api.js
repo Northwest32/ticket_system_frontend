@@ -51,11 +51,12 @@ export const userApi = {
       // 1) 上传到Cloudinary
       const { url, publicId } = await uploadAvatar(file);
       
-      // 2) 保存URL到后端
-      const response = await http.post('/update-avatar', {
-        avatarUrl: url,
-        publicId: publicId
-      });
+      // 2) 保存URL到后端 - 使用FormData格式
+      const formData = new FormData();
+      formData.append('avatarUrl', url);
+      formData.append('publicId', publicId);
+      
+      const response = await http.post('/update-avatar', formData);
       
       return response.data;
     } catch (error) {
