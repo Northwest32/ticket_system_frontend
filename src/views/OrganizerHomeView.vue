@@ -96,10 +96,7 @@ const loadFollowerCount = async () => {
   }
 }
 
-const getOrganizerInitials = () => {
-  const name = organizer.value.name
-  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
-}
+
 
 // 页面加载时获取关注者数量
 onMounted(async () => {
