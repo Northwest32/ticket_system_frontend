@@ -3,14 +3,13 @@ const API = import.meta.env.VITE_API_BASE_URL || 'https://sad-sarina-yezyeats-d7
 
 export async function uploadImage(file, folder = 'ticket-system/uploads', publicId) {
   try {
-    // 1) 向后端获取签名
+    // 1) get signature from backend
     const url = new URL(`${API}/cloudinary/signature`);
     url.searchParams.set('folder', folder);
     if (publicId) url.searchParams.set('publicId', publicId);
 
     const token = localStorage.getItem('token');
     const sigRes = await fetch(url, { 
-      credentials: 'include',
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',
         'Content-Type': 'application/json'
@@ -23,7 +22,7 @@ export async function uploadImage(file, folder = 'ticket-system/uploads', public
     
     const { timestamp, signature, apiKey } = await sigRes.json();
 
-    // 2) 直传Cloudinary
+    // 2) upload to Cloudinary
     const form = new FormData();
     form.append('file', file);
     form.append('api_key', apiKey);
@@ -36,29 +35,29 @@ export async function uploadImage(file, folder = 'ticket-system/uploads', public
     const r = await fetch(uploadUrl, { method: 'POST', body: form });
     
     if (!r.ok) {
-      throw new Error('上传到Cloudinary失败');
+      throw new Error('Upload to Cloudinary failed');
     }
     
-    const data = await r.json(); // 包含 secure_url / public_id
+    const data = await r.json(); // contains secure_url / public_id
 
     return { url: data.secure_url, publicId: data.public_id };
   } catch (error) {
-    console.error('Cloudinary上传错误:', error);
+    console.error('Cloudinary upload error:', error);
     throw error;
   }
 }
 
-// 上传头像
+// upload avatar
 export async function uploadAvatar(file) {
   return await uploadImage(file, 'ticket-system/avatars');
 }
 
-// 上传事件封面
+// upload event cover
 export async function uploadEventCover(file) {
   return await uploadImage(file, 'ticket-system/event-covers');
 }
 
-// 上传事件图片
+// upload event image
 export async function uploadEventImage(file) {
   return await uploadImage(file, 'ticket-system/event-images');
 }

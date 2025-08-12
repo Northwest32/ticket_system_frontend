@@ -8,11 +8,11 @@ const http = axios.create({
   },
 });
 
-// 请求拦截器 - 添加token
+// request interceptor - add token
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   
-  // 定义需要认证的路径
+  // define protected paths
   const protectedPaths = [
     '/events/my',
     '/me',
@@ -24,23 +24,24 @@ http.interceptors.request.use((config) => {
     '/refund-request',
     '/seckill',
     '/organizer-profile',
-    '/cloudinary/signature'
+    '/cloudinary/signature',
+    '/update-avatar'
   ];
   
-  // 检查当前请求路径是否需要认证
+  // check if current request path is protected
   let isProtectedPath = protectedPaths.some(path => config.url.includes(path));
   
-  // 特殊处理：/events路径只有POST/PUT/DELETE方法需要认证，GET方法不需要
+  // special handling: /events path only needs authentication for POST/PUT/DELETE methods, GET method does not need authentication
   if (config.url.includes('/events') && !config.url.includes('/events/my')) {
     isProtectedPath = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase());
   }
   
-  // 对于需要认证的路径且有token，添加Authorization头
+  // for protected paths with token, add Authorization header
   if (token && isProtectedPath) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // 对于multipart/form-data请求，不设置Content-Type，让浏览器自动设置
+  // for multipart/form-data requests, do not set Content-Type, let browser set it automatically
   if (config.data instanceof FormData) {
     delete config.headers['Content-Type'];
   }
@@ -50,20 +51,20 @@ http.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// 响应拦截器 - 处理错误
+// response interceptor - handle errors
 http.interceptors.response.use((response) => {
   return response;
 }, (error) => {
   if (error.response?.status === 401) {
-    // token过期或无效，清除本地存储
+    // token expired or invalid, clear local storage
     localStorage.removeItem('token');
     localStorage.removeItem('userInfo');
     window.location.href = '/login';
   }
   
-  // 处理CORS错误
+  // handle CORS errors
   if (error.code === 'ERR_NETWORK' || error.message.includes('CORS')) {
-    console.error('CORS Error: 请确保后端服务器正在运行且CORS配置正确');
+    console.error('CORS Error: please ensure the backend server is running and CORS configuration is correct');
   }
   
   return Promise.reject(error);
