@@ -233,7 +233,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { useCategory } from '../composables/useCategory'
 import { useEvent } from '../composables/useEvent'
-import { imageApi } from '../services/api'
+import { eventApi } from '../services/api'
 import Header from '../components/Header.vue'
 import DateTimePicker from '../components/DateTimePicker.vue'
 import TiptapEditor from '../components/TiptapEditor.vue'
@@ -324,11 +324,11 @@ const createEvent = async () => {
       const blob = await response.blob()
       const file = new File([blob], 'event-cover.jpg', { type: 'image/jpeg' })
       
-      const uploadResponse = await imageApi.uploadEventImage(file)
+      const uploadResponse = await eventApi.uploadEventCover(file)
       
-      if (uploadResponse && uploadResponse.code === 0) {
-        eventData.value.imageUrl = uploadResponse.data
-        console.log('🔍 Image uploaded successfully:', uploadResponse.data)
+      if (uploadResponse && uploadResponse.url) {
+        eventData.value.imageUrl = uploadResponse.url
+        console.log('🔍 Image uploaded successfully:', uploadResponse.url)
       } else {
         console.error('Failed to upload image:', uploadResponse)
         alert('Failed to upload image. Please try again.')

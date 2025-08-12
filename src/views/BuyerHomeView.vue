@@ -298,7 +298,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { canFollowOrganizers, canBookmarkEvents } from '../utils/permissions'
-import { userAvatarApi, orderApi, refundApi, followApi, eventApi, bookmarkApi, commentApi } from '../services/api'
+import { userApi, orderApi, refundApi, followApi, eventApi, bookmarkApi, commentApi } from '../services/api'
 import Header from '../components/Header.vue'
 
 const router = useRouter()
@@ -539,12 +539,12 @@ const handleAvatarChange = async (event) => {
   }
   
   try {
-    // 直接调用API上传文件
-    const response = await userAvatarApi.updateAvatar(file)
+    // 使用新的Cloudinary上传功能
+    const response = await userApi.updateAvatar(file)
     
     if (response.code === 0) {
       // 使用后端返回的URL
-      const avatarUrl = response.data
+      const avatarUrl = response.data.avatarUrl || response.data
       
       // 更新本地用户信息
       if (currentUser.value) {
@@ -584,7 +584,7 @@ const getAvatarUrl = (avatarUrl) => {
   
   // 如果是相对路径，添加后端基础URL
   if (avatarUrl.startsWith('/')) {
-    return 'http://localhost:8080' + avatarUrl
+    return 'https://sad-sarina-yezyeats-d7548659.koyeb.app' + avatarUrl
   }
   
   return avatarUrl

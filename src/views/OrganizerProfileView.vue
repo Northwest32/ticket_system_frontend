@@ -562,7 +562,7 @@ const getAvatarUrl = (avatarUrl) => {
   
   // if relative path, add backend base URL
   if (avatarUrl.startsWith('/')) {
-    return 'http://localhost:8080' + avatarUrl
+    return 'https://sad-sarina-yezyeats-d7548659.koyeb.app' + avatarUrl
   }
   
   return avatarUrl

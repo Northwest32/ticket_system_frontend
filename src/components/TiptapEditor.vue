@@ -42,16 +42,19 @@
       </button>
       
       <!-- image upload button -->
-      <label class="toolbar-button" :class="{ 'disabled': !editor }" title="Upload Image">
+      <label class="toolbar-button" :class="{ 'disabled': !editor || isUploading }" title="Upload Image">
         <input
           type="file"
           accept="image/*"
           @change="handleImageUpload"
           class="file-input"
-          :disabled="!editor"
+          :disabled="!editor || isUploading"
         />
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg v-if="!isUploading" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z" fill="currentColor"/>
+        </svg>
+        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
         </svg>
       </label>
       
@@ -109,35 +112,70 @@
         :disabled="!editor"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 17h2v.5H1v1h3v-1.5H2V17zm0-6h1.5v1H1v1h3v-1.5H2V11zm0-6h2v1H1v1h3V6H2V5zm5 6h14v-2H7v2zm0 6h14v-2H7v2zM7 3v2h14V3H7z" fill="currentColor"/>
+          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" fill="currentColor"/>
+        </svg>
+      </button>
+      
+      <div class="toolbar-divider"></div>
+      
+      <button
+        type="button"
+        @click="editor?.chain().focus().toggleBlockquote().run()"
+        :class="{ 'is-active': editor?.isActive('blockquote') }"
+        class="toolbar-button"
+        :disabled="!editor"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" fill="currentColor"/>
+        </svg>
+      </button>
+      
+      <div class="toolbar-divider"></div>
+      
+      <button
+        type="button"
+        @click="editor?.chain().focus().undo().run()"
+        class="toolbar-button"
+        :disabled="!editor?.can().undo()"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" fill="currentColor"/>
+        </svg>
+      </button>
+      
+      <button
+        type="button"
+        @click="editor?.chain().focus().redo().run()"
+        class="toolbar-button"
+        :disabled="!editor?.can().redo()"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z" fill="currentColor"/>
         </svg>
       </button>
     </div>
     
-    <!-- editor content area -->
-    <div v-if="!editor" class="editor-loading">
-      <p>Loading editor...</p>
+    <!-- editor content -->
+    <div class="editor-content">
+      <editor-content :editor="editor" />
     </div>
-    <editor-content 
-      v-else
-      :editor="editor" 
-      class="editor-content"
-      :placeholder="placeholder"
-    />
     
     <!-- character count -->
-    <div class="character-count">
-      {{ characterCount }}/{{ maxLength }} characters
+    <div class="editor-footer">
+      <span class="character-count">
+        {{ characterCount }}/{{ props.maxLength }}
+      </span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
+import { uploadEventImage } from '../api/cloudinary'
 
 const props = defineProps({
   modelValue: {
@@ -155,6 +193,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+const isUploading = ref(false)
 
 const editor = useEditor({
   content: props.modelValue,
@@ -192,16 +231,40 @@ const insertImage = () => {
   }
 }
 
-// handle image file upload
-const handleImageUpload = (event) => {
+// handle image file upload with Cloudinary
+const handleImageUpload = async (event) => {
   const file = event.target.files[0]
-  if (file && editor.value) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const imageUrl = e.target.result
-      editor.value.chain().focus().setImage({ src: imageUrl }).run()
-    }
-    reader.readAsDataURL(file)
+  if (!file || !editor.value) return
+  
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file')
+    return
+  }
+  
+  // 验证文件大小（限制为5MB）
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Image size should be less than 5MB')
+    return
+  }
+  
+  isUploading.value = true
+  
+  try {
+    // 上传到Cloudinary
+    const { url, publicId } = await uploadEventImage(file)
+    
+    // 插入图片到编辑器
+    editor.value.chain().focus().setImage({ src: url }).run()
+    
+    console.log('Image uploaded to Cloudinary:', url)
+  } catch (error) {
+    console.error('Failed to upload image:', error)
+    alert('Failed to upload image. Please try again.')
+  } finally {
+    isUploading.value = false
+    // 清空input
+    event.target.value = ''
   }
 }
 
@@ -384,6 +447,30 @@ onBeforeUnmount(() => {
 
 .editor-content :deep(.ProseMirror img.editor-image:hover) {
   transform: scale(1.02);
+}
+
+.editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.character-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.toolbar-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-button.disabled:hover {
+  background-color: white;
+  border-color: #d1d5db;
 }
 
 .character-count {
