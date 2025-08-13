@@ -215,6 +215,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { canFollowOrganizers } from '../utils/permissions'
 import { organizerProfileApi, followApi, commentApi, eventApi, userApi } from '../services/api'
+import { getAvatarUrl, getAvatarInitials } from '../utils/avatarUtils'
 import Header from '../components/Header.vue'
 
 const route = useRoute()
@@ -551,22 +552,7 @@ const handleImageError = (event) => {
   }
 }
 
-// get avatar URL
-const getAvatarUrl = (avatarUrl) => {
-  if (!avatarUrl) return ''
-  
-  // if base64 format, return directly
-  if (avatarUrl.startsWith('data:')) {
-    return avatarUrl
-  }
-  
-  // if relative path, add backend base URL
-  if (avatarUrl.startsWith('/')) {
-    return 'https://sad-sarina-yezyeats-d7548659.koyeb.app' + avatarUrl
-  }
-  
-  return avatarUrl
-}
+
 </script>
 
 <style scoped>
