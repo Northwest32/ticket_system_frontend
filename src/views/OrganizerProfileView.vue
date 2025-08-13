@@ -546,9 +546,7 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: 'numeric'
   })
 }
 
@@ -741,12 +739,14 @@ const handleImageError = (event) => {
 
 /* Description 里的图文不要把布局撑爆 */
 .description-content img {
-  display: block;              /* 让图片独占一行 */
   max-width: 100%;              /* 限制最大宽度为父元素宽度 */
   height: auto;                 /* 高度自动，保持比例 */
-  width: auto;                  /* 宽度自动，防止被拉伸 */
+  width: 100%;                  /* 宽度100%，自适应容器 */
   border-radius: 8px;
-  object-fit: contain;           /* 宽高比例不变，完整显示图片 */
+  object-fit: cover;             /* 保持比例，裁剪超出部分 */
+  display: block;                /* 块级显示 */
+  margin: 1rem 0;                /* 上下间距 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
 }
 
 
@@ -762,6 +762,9 @@ const handleImageError = (event) => {
   color: #6b7280;
   line-height: 1.7;
   font-size: 0.95rem;
+  overflow: hidden;              /* 防止内容溢出 */
+  word-wrap: break-word;         /* 长单词换行 */
+  overflow-wrap: break-word;     /* 现代浏览器长单词换行 */
 }
 
 .description-content p {
@@ -807,13 +810,7 @@ const handleImageError = (event) => {
   text-decoration: underline;
 }
 
-.description-content img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin: 1rem 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+/* 移除重复的图片样式定义，使用上面的统一样式 */
 
 /* Comments section */
 .comments-list {

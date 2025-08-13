@@ -147,8 +147,8 @@ const handleAvatarChange = async (event) => {
     const response = await userApi.updateAvatar(file)
     
     if (response.code === 0) {
-      // use backend returned URL
-      const avatarUrl = response.data.avatarUrl || response.data
+      // use backend returned URL (response.data is the Cloudinary URL string)
+      const avatarUrl = response.data
       
       // update local user info
       if (currentUser.value) {

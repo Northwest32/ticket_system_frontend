@@ -49,14 +49,12 @@ export const userApi = {
   updateAvatar: async (file) => {
     try {
       // 1) upload to Cloudinary
-      const { url, publicId } = await uploadAvatar(file);
+      const { url: cloudinaryUrl } = await uploadAvatar(file);
       
-      // 2) save URL to backend - only send Cloudinary URL, no local file
-      const formData = new FormData();
-      formData.append('avatarUrl', url);
-      formData.append('publicId', publicId);
-      
-      const response = await http.post('/update-avatar', formData);
+      // 2) save Cloudinary URL to backend
+      const response = await http.post('/update-avatar', {
+        avatarUrl: cloudinaryUrl
+      });
       
       return response.data;
     } catch (error) {

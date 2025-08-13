@@ -410,10 +410,8 @@ const formatDate = (dateString) => {
   const dayNum = date.getDate()
   const month = months[date.getMonth()]
   const year = date.getFullYear()
-  const hours = date.getHours().toString().padStart(2, '0')
-  const minutes = date.getMinutes().toString().padStart(2, '0')
   
-  return `${day} ${dayNum} ${month} ${year} - ${hours}:${minutes}`
+  return `${day} ${dayNum} ${month} ${year}`
 }
 
 // view order details
@@ -544,8 +542,8 @@ const handleAvatarChange = async (event) => {
     const response = await userApi.updateAvatar(file)
     
     if (response.code === 0) {
-      // use backend returned URL
-      const avatarUrl = response.data.avatarUrl || response.data
+      // use backend returned URL (response.data is the Cloudinary URL string)
+      const avatarUrl = response.data
       
       // update local user info
       if (currentUser.value) {
