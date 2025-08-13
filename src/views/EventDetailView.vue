@@ -945,6 +945,27 @@ const getOrganizerInitials = () => {
   margin-bottom: 1.5rem;
   max-height: 300px;
   overflow-y: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.comments-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .no-comments {
@@ -1007,6 +1028,9 @@ const getOrganizerInitials = () => {
   line-height: 1.5;
   font-size: 0.9rem;
   margin-bottom: 0.75rem;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-actions {

@@ -23,10 +23,12 @@ export function getAvatarUrl(avatarUrl) {
     return avatarUrl
   }
   
-  // if relative path, return empty string, let component display default avatar
+  // if relative path, add backend base URL
   if (avatarUrl.startsWith('/')) {
-    console.warn('Local file path detected for avatar, ignoring:', avatarUrl)
-    return ''
+    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://sad-sarina-yezyeats-d7548659.koyeb.app/api'
+    // 移除 /api 后缀，因为头像路径通常是 /uploads/avatars/...
+    const baseUrl = backendUrl.replace('/api', '')
+    return baseUrl + avatarUrl
   }
   
   return avatarUrl

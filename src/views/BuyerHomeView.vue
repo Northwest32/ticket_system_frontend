@@ -1200,6 +1200,9 @@ const loadRefundStatus = async () => {
   color: #374151;
   line-height: 1.6;
   margin-bottom: 0.5rem;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-target,

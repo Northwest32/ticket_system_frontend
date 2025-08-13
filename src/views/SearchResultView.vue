@@ -105,7 +105,7 @@
               :key="event.id"
               class="event-card"
               :class="{ 'expired-event': getEventStatus(event) === 'expired' }"
-              @click="getEventStatus(event) === 'active' ? viewEvent(event.id) : null"
+              @click="viewEvent(event.id)"
             >
               <!-- left image -->
               <div class="event-image">
@@ -141,7 +141,6 @@
                   <span class="status-text">Event Ended</span>
                 </div>
                 <button 
-                  v-else 
                   class="see-event-button"
                   @click.stop="viewEvent(event.id)"
                 >
@@ -714,12 +713,11 @@ const handleImageError = (event) => {
 
 .event-card.expired-event {
   opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .event-card.expired-event:hover {
-  transform: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .event-image {

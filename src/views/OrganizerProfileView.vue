@@ -6,7 +6,7 @@
       <div class="container">
         <div v-if="organizer" class="organizer-profile">
           <!-- top section -->
-          <div class="top-section card">
+          <div class="top-section">
             <!-- Logo/Back button -->
             <div class="logo-back-section">
               <button class="back-button" @click="goBack">
@@ -741,10 +741,14 @@ const handleImageError = (event) => {
 
 /* Description 里的图文不要把布局撑爆 */
 .description-content img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+  display: block;              /* 让图片独占一行 */
+  max-width: 100%;              /* 限制最大宽度为父元素宽度 */
+  height: auto;                 /* 高度自动，保持比例 */
+  width: auto;                  /* 宽度自动，防止被拉伸 */
+  border-radius: 8px;
+  object-fit: contain;           /* 宽高比例不变，完整显示图片 */
 }
+
 
 .section-title {
   font-size: 1.3rem;
@@ -816,6 +820,27 @@ const handleImageError = (event) => {
   margin-bottom: 1.5rem;
   max-height: 400px;
   overflow-y: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.comments-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .no-comments {
@@ -878,6 +903,9 @@ const handleImageError = (event) => {
   line-height: 1.5;
   font-size: 0.9rem;
   margin: 0 0 0.75rem 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-actions {

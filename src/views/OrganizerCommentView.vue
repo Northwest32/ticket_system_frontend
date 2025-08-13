@@ -382,6 +382,9 @@ onMounted(async () => {
   color: #374151;
   margin-bottom: 0.5rem;
   line-height: 1.5;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-target,
