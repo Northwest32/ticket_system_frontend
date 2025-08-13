@@ -248,29 +248,39 @@ onMounted(async () => {
     return
   }
   
-  // load user info directly, not depend on organizer profile API
+  // load user info and organizer profile
   try {
-    console.log('[OrganizerProfileView] Loading user info directly...')
-    const userResponse = await userApi.getUserById(organizerId)
+    console.log('[OrganizerProfileView] Loading user info and organizer profile...')
+    const [userResponse, profileResponse] = await Promise.all([
+      userApi.getUserById(organizerId),
+      organizerProfileApi.getProfile(organizerId)
+    ])
     console.log('[OrganizerProfileView] User response:', userResponse)
+    console.log('[OrganizerProfileView] Profile response:', profileResponse)
     
     if (userResponse && userResponse.code === 0 && userResponse.data) {
+      // get description from profile API, fallback to default if not available
+      let description = 'This organizer has not provided a description yet.'
+      if (profileResponse && profileResponse.code === 0 && profileResponse.data && profileResponse.data.homepageDescription) {
+        description = profileResponse.data.homepageDescription
+      }
+      
       organizer.value = {
         id: organizerId,
         name: userResponse.data.username,
-        description: 'This organizer has not provided a description yet.',
+        description: description,
         eventCount: 0,
         followerCount: 0,
         avatarUrl: userResponse.data.avatarUrl || null
       }
-      console.log('[OrganizerProfileView] Set organizer from user API:', organizer.value)
+      console.log('[OrganizerProfileView] Set organizer from user API and profile API:', organizer.value)
     } else {
       console.error('[OrganizerProfileView] Failed to get user info, redirecting')
       router.push('/events')
       return
     }
   } catch (error) {
-    console.error('[OrganizerProfileView] Error loading user info:', error)
+    console.error('[OrganizerProfileView] Error loading user info or profile:', error)
     router.push('/events')
     return
   }
