@@ -719,7 +719,7 @@ const handleImageError = (event) => {
 /* main content section */
 .main-content {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 7fr 3fr;
   gap: 2rem;
   margin-bottom: 2rem;
 }
