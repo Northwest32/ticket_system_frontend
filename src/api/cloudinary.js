@@ -17,7 +17,7 @@ export async function uploadImage(file, folder = 'ticket-system/uploads', public
     });
     
     if (!sigRes.ok) {
-      throw new Error('获取签名失败');
+      throw new Error('Failed to get signature ');
     }
     
     const { timestamp, signature, apiKey } = await sigRes.json();

@@ -1,29 +1,29 @@
-// 全局头像URL处理工具
+// global avatar URL processing tool
 
 /**
- * 处理头像URL，统一转换逻辑
- * @param {string} avatarUrl - 头像URL
- * @returns {string} 处理后的头像URL
+ * process avatar URL, unify conversion logic
+ * @param {string} avatarUrl - avatar URL
+ * @returns {string} processed avatar URL
  */
 export function getAvatarUrl(avatarUrl) {
   if (!avatarUrl) return ''
   
-  // 如果是base64格式，直接返回
+  // if base64 format, return directly
   if (avatarUrl.startsWith('data:')) {
     return avatarUrl
   }
   
-  // 如果是Cloudinary URL，直接返回
+  // if Cloudinary URL, return directly
   if (avatarUrl.includes('cloudinary.com')) {
     return avatarUrl
   }
   
-  // 如果是相对路径，添加后端基础URL
+  // if relative path, add backend base URL
   if (avatarUrl.startsWith('/')) {
     return 'https://sad-sarina-yezyeats-d7548659.koyeb.app' + avatarUrl
   }
   
-  // 如果是完整的HTTP/HTTPS URL，直接返回
+  // if complete HTTP/HTTPS URL, return directly
   if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
     return avatarUrl
   }
@@ -32,8 +32,8 @@ export function getAvatarUrl(avatarUrl) {
 }
 
 /**
- * 检查头像URL是否为Cloudinary URL
- * @param {string} avatarUrl - 头像URL
+ * check if avatar URL is Cloudinary URL
+ * @param {string} avatarUrl - avatar URL
  * @returns {boolean}
  */
 export function isCloudinaryUrl(avatarUrl) {
@@ -41,9 +41,9 @@ export function isCloudinaryUrl(avatarUrl) {
 }
 
 /**
- * 获取头像的备用显示文本
- * @param {string} name - 用户名
- * @returns {string} 首字母
+ * get avatar display text
+ * @param {string} name - username
+ * @returns {string} initials
  */
 export function getAvatarInitials(name) {
   if (!name) return 'U'

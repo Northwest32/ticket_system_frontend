@@ -18,39 +18,22 @@
           <!-- Description Edit Area -->
           <div class="description-edit-section">
             <label for="description" class="description-label">
-              Description {{ tiptapAvailable ? '(Rich Text Editor)' : '(Text Editor)' }}
+              Description
             </label>
             <TiptapEditor
               v-if="tiptapAvailable"
               v-model="description"
               :placeholder="'Enter your organizer description here... You can include details about your organization, mission, and what makes your events special. Use the toolbar above to format your text.'"
-              :max-length="1000"
+              :max-length="3000"
             />
             <SimpleTextEditor
               v-else
               v-model="description"
               :placeholder="'Enter your organizer description here... You can include details about your organization, mission, and what makes your events special.'"
-              :max-length="1000"
+              :max-length="3000"
             />
             
-            <!-- Image Upload Section (Optional) -->
-            <div class="image-upload-section">
-              <label for="profile-image" class="image-upload-label">
-                <div class="image-upload-area">
-                  <svg class="upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
-                  </svg>
-                  <span class="upload-text">Add Profile Image (Optional)</span>
-                </div>
-              </label>
-              <input
-                id="profile-image"
-                type="file"
-                accept="image/*"
-                @change="handleImageUpload"
-                class="image-input"
-              />
-            </div>
+
           </div>
           
           <!-- Submit Button -->
@@ -82,7 +65,6 @@ const router = useRouter()
 const { currentUser } = useAuth()
 
 const description = ref('')
-const selectedImage = ref(null)
 const isLoading = ref(false)
 const tiptapAvailable = ref(false)
 
@@ -135,13 +117,7 @@ const loadCurrentProfile = async () => {
   }
 }
 
-const handleImageUpload = (event) => {
-  const file = event.target.files[0]
-  if (file) {
-    selectedImage.value = file
-    // here you can add image preview functionality
-  }
-}
+
 
 const saveProfile = async () => {
   // check if HTML content is empty (remove HTML tags)
@@ -152,8 +128,8 @@ const saveProfile = async () => {
   }
   
   // check if character count (remove HTML tags)
-  if (textContent.length > 1000) {
-    alert('Description is too long. Please keep it under 1000 characters.')
+  if (textContent.length > 3000) {
+    alert('Description is too long. Please keep it under 3000 characters.')
     return
   }
   
@@ -172,8 +148,7 @@ const saveProfile = async () => {
     
     const profileData = {
       organizerId: parseInt(currentUser.value.id), // ensure it is a number type
-      homepageDescription: description.value,
-      bannerImageUrl: null // temporarily not handle image upload
+      homepageDescription: description.value
     }
     
     console.log('🔍 Sending profile data:', profileData)
@@ -301,44 +276,7 @@ const goBack = () => {
   margin-top: 0.5rem;
 }
 
-/* Image Upload Section */
-.image-upload-section {
-  margin-top: 1.5rem;
-}
 
-.image-upload-label {
-  display: block;
-  cursor: pointer;
-}
-
-.image-upload-area {
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
-  padding: 2rem;
-  text-align: center;
-  transition: all 0.2s ease;
-  background-color: #f9fafb;
-}
-
-.image-upload-area:hover {
-  border-color: #FAE3C6;
-  background-color: #fef7ed;
-}
-
-.upload-icon {
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-}
-
-.upload-text {
-  display: block;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.image-input {
-  display: none;
-}
 
 /* Submit Section */
 .submit-section {

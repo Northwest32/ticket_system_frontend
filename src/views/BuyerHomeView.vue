@@ -3,7 +3,7 @@
     <Header />
     
     <main class="buyer-main">
-      <!-- 用户信息区域 -->
+      <!-- user info section -->
       <section class="user-profile-section">
         <div class="container">
           <div class="user-profile">
@@ -33,7 +33,7 @@
         </div>
       </section>
 
-      <!-- 功能按钮区域 -->
+      <!-- action buttons section -->
       <section class="action-buttons-section">
         <div class="container">
           <div class="action-buttons">
@@ -71,10 +71,10 @@
         </div>
       </section>
 
-      <!-- 内容区域 -->
+      <!-- content section -->
       <section class="content-section">
         <div class="container">
-          <!-- Events 内容 -->
+          <!-- Events content -->
           <div v-if="activeTab === 'events'" class="events-content">
             <h2 class="content-title">My Events</h2>
             <div class="events-list">
@@ -100,7 +100,7 @@
             </div>
           </div>
 
-          <!-- Following 内容 -->
+          <!-- Following content -->
           <div v-if="activeTab === 'following'" class="following-content">
             <h2 class="content-title">Following Organizers</h2>
             <div class="organizers-list">
@@ -128,7 +128,7 @@
             </div>
           </div>
 
-          <!-- Bookmark 内容 -->
+          <!-- Bookmark content -->
           <div v-if="activeTab === 'bookmark'" class="bookmark-content">
             <h2 class="content-title">Bookmarked Events</h2>
             <div class="bookmarked-events-list">
@@ -150,7 +150,7 @@
             </div>
           </div>
 
-          <!-- Orders 内容 -->
+          <!-- Orders content -->
           <div v-if="activeTab === 'orders'" class="orders-content">
             <h2 class="content-title">My Orders</h2>
             <div class="orders-list">
@@ -199,11 +199,11 @@
             </div>
           </div>
 
-          <!-- Comments 内容 -->
+          <!-- Comments content -->
           <div v-if="activeTab === 'comments'" class="comments-content">
             <h2 class="content-title">Comment</h2>
             
-            <!-- Given/Received 切换按钮 -->
+            <!-- Given/Received switch buttons -->
             <div class="comment-tabs">
               <button 
                 class="comment-tab" 
@@ -309,7 +309,7 @@ const activeTab = ref('orders')
 const commentTab = ref('given')
 const avatarInput = ref(null)
 
-// 权限检查
+// permission check
 const canFollow = computed(() => {
   return canFollowOrganizers(currentUser.value?.userType)
 })
@@ -320,13 +320,13 @@ const canBookmark = computed(() => {
 
 
 
-// 用户头像首字母
+// user avatar initials
 const userInitials = computed(() => {
   if (!currentUser.value?.name) return 'U'
   return currentUser.value.name.split(' ').map(n => n[0]).join('').toUpperCase()
 })
 
-// 模拟用户事件数据
+// mock user events data
 const userEvents = ref([
   {
     id: 1,
@@ -351,23 +351,23 @@ const userEvents = ref([
   }
 ])
 
-// 关注的组织者数据
+// following organizers data
 const followingOrganizers = ref([])
 
-// 收藏的事件数据
+// bookmarked events data
 const bookmarkedEvents = ref([])
 
-// 用户订单数据
+// user orders data
 const userOrders = ref([])
 
-// 评论数据
+// comments data
 const givenComments = ref([])
 const receivedComments = ref([])
 const commentLoading = ref(false)
 
-// 设置活动标签
+// set active tab
 const setActiveTab = async (tab) => {
-  // 检查权限
+  // check permission
   if (tab === 'following' && !canFollow.value) {
     alert('Organizers cannot follow other organizers. Please switch to buyer account.')
     return
@@ -380,23 +380,23 @@ const setActiveTab = async (tab) => {
   
   activeTab.value = tab
   
-  // 如果切换到comments标签，自动加载given评论
+  // if switch to comments tab, automatically load given comments
   if (tab === 'comments') {
     commentTab.value = 'given'
     await loadGivenComments()
   }
 }
 
-// 设置评论标签
+// set comment tab
 const setCommentTab = async (tab) => {
   commentTab.value = tab
-  // 只在切换到received时加载，given在进入comments标签时已经加载过了
+  // only load when switch to received, given is loaded when entering comments tab
   if (tab === 'received') {
     await loadReceivedComments()
   }
 }
 
-// 格式化日期
+// format date
 const formatDate = (dateString) => {
   if (!dateString) return 'Date TBD'
   
@@ -416,67 +416,67 @@ const formatDate = (dateString) => {
   return `${day} ${dayNum} ${month} ${year} - ${hours}:${minutes}`
 }
 
-// 查看订单详情
+// view order details
 const viewOrderDetails = (orderId) => {
   console.log('🔍 Viewing order details for:', orderId)
   router.push(`/order-details/${orderId}`)
 }
 
-// 查看活动详情
+// view event details
 const viewEvent = (eventId) => {
   console.log('🔍 Viewing event details for eventId:', eventId)
   router.push(`/event/${eventId}`)
 }
 
-// 请求退款
+// request refund
 const requestRefund = (orderId) => {
   console.log('Requesting refund for order:', orderId)
   router.push(`/refund-request/${orderId}`)
 }
 
-// 页面激活时重新加载数据
+// reload data when page is activated
 const onPageActivated = () => {
   loadRefundStatus()
   loadBookmarkedEvents()
 }
 
 onMounted(async () => {
-  // 检查用户是否已登录
+  // check if user is logged in
   if (!currentUser.value) {
     router.push('/login')
   }
   
-  // 如果是组织者，默认显示orders tab（因为不能follow或bookmark）
+// if organizer, default to orders tab (because cannot follow or bookmark)
   if (!canFollow.value && !canBookmark.value) {
     activeTab.value = 'orders'
   }
   
-  // 加载用户订单数据
+  // load user orders data
   await loadUserOrders()
   
-  // 加载关注列表
+  // load following organizers data
   await loadFollowingOrganizers()
   
-  // 加载收藏列表
+  // load bookmarked events data
   await loadBookmarkedEvents()
   
-  // 加载退款状态
+  // load refund status
   await loadRefundStatus()
 })
 
-// 加载用户订单数据
+// load user orders data
 const loadUserOrders = async () => {
   try {
     console.log('🔍 Loading user orders...')
     const response = await orderApi.getMyOrders()
     
     if (response && response.code === 0 && response.data) {
-      // 转换后端订单数据格式为前端需要的格式
+      // convert backend order data format to frontend needed format
       const ordersWithOrganizers = await Promise.all(
         response.data.map(async (order) => {
-          let organizer = 'Event Organizer' // 默认值
+          let organizer = 'Event Organizer' // default value
           
-          // 通过事件ID获取组织者信息
+          // get organizer info from event ID
           if (order.eventId) {
             try {
               const eventResponse = await eventApi.getEventById(order.eventId)
@@ -486,20 +486,20 @@ const loadUserOrders = async () => {
               }
             } catch (error) {
               console.error(`Failed to load event details for event ${order.eventId}:`, error)
-              // 如果获取事件详情失败，保持默认值
+              // if failed to load event details, keep default value
             }
           }
           
           return {
             id: order.id,
             eventId: order.eventId,
-            eventTitle: order.eventTitle, // 后端直接返回真实事件标题
+            eventTitle: order.eventTitle, // backend directly returns real event title
             orderDate: order.createTime,
-            venue: order.venue, // 后端直接返回真实场地信息
-            organizer: organizer, // 通过事件ID获取的组织者信息
+            venue: order.venue, // backend directly returns real venue info
+            organizer: organizer, // get organizer info from event ID
             quantity: order.quantity,
-            totalAmount: order.totalAmount, // 后端直接返回计算好的总金额
-            orderId: `ORD${order.id.toString().padStart(3, '0')}`, // 生成订单ID格式
+            totalAmount: order.totalAmount, // backend directly returns calculated total amount
+            orderId: `ORD${order.id.toString().padStart(3, '0')}`, // generate order ID format
             status: order.status?.toLowerCase() || 'unknown',
             refundStatus: order.refundStatus || null
           }
@@ -518,7 +518,7 @@ const loadUserOrders = async () => {
   }
 }
 
-// 头像编辑功能
+// avatar edit function
 const editAvatar = () => {
   avatarInput.value.click()
 }
@@ -527,37 +527,37 @@ const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
   
-  // 验证文件类型
+// validate file type
   if (!file.type.startsWith('image/')) {
     alert('Please select an image file')
     return
   }
   
-  // 验证文件大小（限制为5MB）
+  // validate file size (limit to 5MB)
   if (file.size > 5 * 1024 * 1024) {
     alert('Image size should be less than 5MB')
     return
   }
   
   try {
-    // 使用新的Cloudinary上传功能
+    // use new Cloudinary upload function
     const response = await userApi.updateAvatar(file)
     
     if (response.code === 0) {
-      // 使用后端返回的URL
+      // use backend returned URL
       const avatarUrl = response.data.avatarUrl || response.data
       
-      // 更新本地用户信息
+      // update local user info
       if (currentUser.value) {
         currentUser.value.avatarUrl = avatarUrl
         
-        // 更新localStorage
+        // update localStorage
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         userInfo.avatarUrl = avatarUrl
         localStorage.setItem('userInfo', JSON.stringify(userInfo))
       }
       
-      // 刷新用户信息，确保所有页面同步
+      // refresh user info, ensure all pages are synchronized
       const { refreshUserInfo } = useAuth()
       await refreshUserInfo()
       
@@ -570,17 +570,17 @@ const handleAvatarChange = async (event) => {
     alert('Failed to upload avatar. Please try again.')
   }
   
-  // 清空input
+  // clear input
   event.target.value = ''
 }
 
-// 获取用户首字母
+// get user initials
 const getUserInitials = () => {
   const name = currentUser.value?.name || currentUser.value?.username || 'User'
   return getAvatarInitials(name)
 }
 
-// 加载关注列表
+// load following organizers data
 const loadFollowingOrganizers = async () => {
   try {
     console.log('🔍 Loading following organizers...')
@@ -604,14 +604,14 @@ const loadFollowingOrganizers = async () => {
   }
 }
 
-// 取消关注组织者
+// unfollow organizer
 const unfollowOrganizer = async (organizerId) => {
   try {
     console.log('🔍 Unfollowing organizer:', organizerId)
     const response = await followApi.unfollowOrganizer(organizerId)
     
     if (response && response.code === 0) {
-      // 从列表中移除
+      // remove from list
       followingOrganizers.value = followingOrganizers.value.filter(
         organizer => organizer.organizerId !== organizerId
       )
@@ -625,14 +625,14 @@ const unfollowOrganizer = async (organizerId) => {
   }
 }
 
-// 加载收藏列表
+// load bookmarked events
 const loadBookmarkedEvents = async () => {
   try {
     console.log('🔍 Loading bookmarked events...')
     const response = await bookmarkApi.getMyBookmarks()
     
     if (response && response.code === 0 && response.data) {
-      // 直接使用后端返回的事件详情
+      // directly use event details returned from backend
       bookmarkedEvents.value = response.data.map(bookmark => ({
         id: bookmark.eventId,
         title: bookmark.eventTitle || `Event ${bookmark.eventId}`,
@@ -652,14 +652,14 @@ const loadBookmarkedEvents = async () => {
   }
 }
 
-// 移除收藏
+// remove bookmark
 const removeBookmark = async (eventId) => {
   try {
     console.log('🔍 Removing bookmark for event:', eventId)
     const response = await bookmarkApi.removeBookmark(eventId)
     
     if (response && response.code === 0) {
-      // 从列表中移除
+      // remove from list
       bookmarkedEvents.value = bookmarkedEvents.value.filter(
         event => event.id !== eventId
       )
@@ -673,19 +673,19 @@ const removeBookmark = async (eventId) => {
   }
 }
 
-// 查看事件详情
+// view event details
 const viewBookmarkedEvent = (eventId) => {
   console.log('🔍 Viewing bookmarked event details for eventId:', eventId)
   router.push(`/event-details/${eventId}`)
 }
 
-// 查看组织者主页
+// view organizer profile
 const viewOrganizerProfile = (organizerId) => {
   console.log('🔍 Viewing organizer profile for organizerId:', organizerId)
   router.push(`/organizer/${organizerId}`)
 }
 
-// 加载发出的评论
+// load given comments
 const loadGivenComments = async () => {
   if (!currentUser.value?.id) return
   
@@ -711,7 +711,7 @@ const loadGivenComments = async () => {
   }
 }
 
-// 加载收到的评论
+// load received comments
 const loadReceivedComments = async () => {
   if (!currentUser.value?.id) return
   
@@ -736,7 +736,7 @@ const loadReceivedComments = async () => {
   }
 }
 
-// 删除评论
+// delete comment
 const deleteComment = async (commentId) => {
   if (!currentUser.value?.id) return
   
@@ -747,7 +747,7 @@ const deleteComment = async (commentId) => {
   try {
     const response = await commentApi.deleteComment(commentId, currentUser.value.id)
     if (response && response.code === 0) {
-      // 重新加载评论列表
+      // reload comment list
       await loadGivenComments()
       alert('Comment deleted successfully!')
     } else {
@@ -759,24 +759,24 @@ const deleteComment = async (commentId) => {
   }
 }
 
-// 加载退款状态
+// load refund status
 const loadRefundStatus = async () => {
   try {
     console.log('🔍 Loading refund status from API...')
     
-    // 从API获取退款申请列表
+    // get refund request list from API
     const response = await refundApi.getMyRefundRequests()
     
     if (response && response.code === 0 && response.data) {
       const refundRequests = response.data
       console.log('🔍 Refund requests loaded from API:', refundRequests)
       
-      // 更新订单的退款状态
+      // update order refund status
       userOrders.value.forEach(order => {
-        // 从orderId中提取数字ID
+        // extract numeric ID from orderId
         const numericOrderId = parseInt(order.orderId.replace('ORD', ''))
         
-        // 查找对应的退款申请
+        // find corresponding refund request
         const refundRequest = refundRequests.find(refund => refund.orderId === numericOrderId)
         if (refundRequest) {
           order.refundStatus = refundRequest.status
@@ -786,7 +786,7 @@ const loadRefundStatus = async () => {
     } else {
       console.error('Failed to load refund status from API:', response)
       
-      // 如果API调用失败，回退到localStorage
+      // if API call fails, fallback to localStorage
       const localRefundRequests = JSON.parse(localStorage.getItem('refundRequests') || '{}')
       userOrders.value.forEach(order => {
         if (localRefundRequests[order.orderId]) {
@@ -798,7 +798,7 @@ const loadRefundStatus = async () => {
   } catch (error) {
     console.error('Error loading refund status from API:', error)
     
-    // 如果API调用失败，回退到localStorage
+    // if API call fails, fallback to localStorage
     try {
       const localRefundRequests = JSON.parse(localStorage.getItem('refundRequests') || '{}')
       userOrders.value.forEach(order => {
@@ -830,7 +830,7 @@ const loadRefundStatus = async () => {
   padding: 0 1rem;
 }
 
-/* 用户信息区域 */
+/* User Profile Section */
 .user-profile-section {
   background-color: white;
   border-bottom: 1px solid #e5e7eb;
@@ -900,7 +900,7 @@ const loadRefundStatus = async () => {
   margin: 0;
 }
 
-/* 功能按钮区域 */
+/* Action Buttons Section */
 .action-buttons-section {
   background-color: white;
   border-bottom: 1px solid #e5e7eb;
@@ -936,7 +936,7 @@ const loadRefundStatus = async () => {
   border-color: #f4d4a3;
 }
 
-/* 内容区域 */
+/* Content Section */
 .content-section {
   padding: 2rem 0;
 }
@@ -948,7 +948,7 @@ const loadRefundStatus = async () => {
   margin-bottom: 1.5rem;
 }
 
-/* Events 内容 */
+/* Events Content */
 .events-list {
   display: flex;
   flex-direction: column;
@@ -1004,7 +1004,7 @@ const loadRefundStatus = async () => {
   background-color: #e6c893;
 }
 
-/* Following 内容 */
+/* Following Content */
 .organizers-list {
   display: flex;
   flex-direction: column;
@@ -1077,7 +1077,7 @@ const loadRefundStatus = async () => {
   background-color: #e6c893;
 }
 
-/* Bookmark 内容 */
+/* Bookmark Content */
 .bookmarked-events-list {
   display: flex;
   flex-direction: column;
@@ -1132,7 +1132,7 @@ const loadRefundStatus = async () => {
   background-color: #e6c893;
 }
 
-/* Comments 内容 */
+/* Comments Content */
 .comment-tabs {
   display: flex;
   gap: 0.5rem;
@@ -1259,7 +1259,7 @@ const loadRefundStatus = async () => {
   margin: 0;
 }
 
-/* Orders 内容 */
+/* Orders Content */
 .orders-list {
   display: flex;
   flex-direction: column;
@@ -1373,7 +1373,7 @@ const loadRefundStatus = async () => {
 
 
 
-/* 响应式设计 */
+/* Responsive Design */
 @media (max-width: 768px) {
   .action-buttons {
     flex-direction: column;

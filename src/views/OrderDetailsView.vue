@@ -4,7 +4,7 @@
     
     <main class="order-details-main">
       <div class="container">
-        <!-- 返回按钮和标题 -->
+        <!-- back button and title -->
         <div class="page-header">
           <button class="back-button" @click="goBack">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -15,7 +15,7 @@
 
         </div>
         <h1 class="page-title">Order Details</h1>
-        <!-- 订单详情卡片 -->
+        <!-- order details card -->
         <div class="order-details-card">
           <div class="order-info">
             <div class="info-row">
@@ -40,7 +40,7 @@
             </div>
           </div>
 
-          <!-- 退款信息 -->
+          <!-- refund information -->
           <div class="refund-section">
             <div class="info-row">
               <span class="info-label">Refund:</span>
@@ -56,7 +56,7 @@
             </div>
           </div>
 
-          <!-- 申请退款按钮 -->
+          <!-- request refund button -->
           <div class="refund-action">
             <button 
               v-if="orderDetails.refundStatus === 'Not requested'"
@@ -73,7 +73,7 @@
           </div>
         </div>
 
-        <!-- 事件信息 -->
+        <!-- event information -->
         <div class="event-info-card">
           <h2 class="card-title">Event Information</h2>
           <div class="event-details">
@@ -103,7 +103,7 @@ const route = useRoute()
 const router = useRouter()
 
 
-// 模拟订单详情数据
+// mock order details data
 const orderDetails = ref({
   orderId: 'ORD001',
   date: '2025-07-20T10:30:00',
@@ -122,10 +122,10 @@ const orderDetails = ref({
 })
 
 onMounted(async () => {
-  // 根据路由参数获取订单ID
+  // get order ID from route params
   const orderId = route.params.orderId
   if (orderId) {
-    // 从API获取订单详情
+    // get order details from API
     await loadOrderDetails(orderId)
   }
 })
@@ -134,7 +134,7 @@ const loadOrderDetails = async (orderId) => {
   try {
     console.log('🔍 Loading order details for orderId:', orderId)
     
-    // 从orderId中提取数字ID（去掉"ORD"前缀）
+    // extract numeric ID from orderId (remove "ORD" prefix)
     const numericId = orderId.replace('ORD', '')
     
     const response = await orderApi.getOrderById(numericId)
@@ -142,25 +142,25 @@ const loadOrderDetails = async (orderId) => {
     if (response && response.code === 0 && response.data) {
       const order = response.data
       
-      // 转换后端数据格式为前端需要的格式
+      // convert backend data format to frontend needed format
       orderDetails.value = {
         orderId: `ORD${order.id.toString().padStart(3, '0')}`,
         date: order.createTime,
         quantity: order.quantity,
         totalPrice: order.totalAmount,
-        paymentMethod: 'Credit Card', // 默认支付方式
-        refundAmount: 0, // 暂时设为0，后续可以从退款接口获取
-        refundStatus: 'Not requested', // 暂时设为默认值，后续可以从退款接口获取
+        paymentMethod: 'Credit Card', // default payment method
+        refundAmount: 0, // set to 0 for now, will be fetched from refund interface later
+        refundStatus: 'Not requested', // set to default value for now, will be fetched from refund interface later
         event: {
           title: order.eventTitle || `Event ${order.eventId}`,
-          date: null, // 暂时设为null，后续可以从事件接口获取
+          date: null, // set to null for now, will be fetched from event interface later
           venue: order.venue || 'TBD',
-          organizer: 'Event Organizer', // 默认值，后续通过事件ID获取
-          image: 'https://via.placeholder.com/300x200/1f2937/ffffff?text=Event' // 暂时使用占位图
+          organizer: 'Event Organizer', // default value, will be fetched from event ID later
+          image: 'https://via.placeholder.com/300x200/1f2937/ffffff?text=Event' // use placeholder image for now
         }
       }
       
-      // 通过事件ID获取组织者信息
+      // get organizer info from event ID
       if (order.eventId) {
         try {
           const eventResponse = await eventApi.getEventById(order.eventId)
@@ -172,13 +172,13 @@ const loadOrderDetails = async (orderId) => {
           }
         } catch (error) {
           console.error('Failed to load event details:', error)
-          // 如果获取事件详情失败，保持默认值
+        // if failed to load event details, keep default value
         }
       }
       
       console.log('🔍 Order details loaded:', orderDetails.value)
       
-      // 检查localStorage中是否有退款请求状态
+      // check if there is refund request status in localStorage
       const refundRequests = JSON.parse(localStorage.getItem('refundRequests') || '{}')
       if (refundRequests[orderId]) {
         orderDetails.value.refundStatus = refundRequests[orderId].status
@@ -240,7 +240,7 @@ const getRefundMessage = (status) => {
 }
 
 const requestRefund = async () => {
-  // 跳转到退款请求页面
+  // redirect to refund request page
   const orderId = route.params.orderId
   console.log('Redirecting to refund request page for order:', orderId)
   router.push(`/refund-request/${orderId}`)
@@ -268,7 +268,7 @@ const goBack = () => {
   padding: 0 1rem;
 }
 
-/* 页面头部 */
+/* page header */
 .page-header {
   /*display: flex;
   align-items: center;
@@ -330,7 +330,7 @@ const goBack = () => {
 
 
 
-/* 订单详情卡片 */
+/* order details card */
 .order-details-card {
   background-color: white;
   border-radius: 12px;
@@ -378,7 +378,7 @@ const goBack = () => {
   font-weight: 600;
 }
 
-/* 退款信息 */
+/* refund information */
 .refund-section {
   border-top: 2px solid #e5e7eb;
   padding-top: 1.5rem;
@@ -407,7 +407,7 @@ const goBack = () => {
   color: #991b1b;
 }
 
-/* 退款操作 */
+/* refund action */
 .refund-action {
   border-top: 2px solid #e5e7eb;
   padding-top: 1.5rem;
@@ -446,7 +446,7 @@ const goBack = () => {
   margin: 0;
 }
 
-/* 事件信息卡片 */
+/* event information card */
 .event-info-card {
   background-color: white;
   border-radius: 12px;
@@ -510,7 +510,7 @@ const goBack = () => {
   font-weight: 500;
 }
 
-/* 响应式设计 */
+/* responsive design */
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
