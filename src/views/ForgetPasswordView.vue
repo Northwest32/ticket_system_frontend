@@ -109,7 +109,7 @@ const handleResetPassword = async () => {
     router.push('/login')
   } catch (error) {
     console.error('Password reset failed:', error)
-    // 确保显示的是字符串而不是对象
+    // ensure display is string instead of object
     const errorMessage = typeof error.message === 'string' ? error.message : 'Password reset failed. Please try again.'
     alert(errorMessage)
   } finally {

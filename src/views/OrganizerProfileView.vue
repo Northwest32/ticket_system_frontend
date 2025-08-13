@@ -6,7 +6,7 @@
       <div class="container">
         <div v-if="organizer" class="organizer-profile">
           <!-- top section -->
-          <div class="top-section">
+          <div class="top-section card">
             <!-- Logo/Back button -->
             <div class="logo-back-section">
               <button class="back-button" @click="goBack">
@@ -16,20 +16,20 @@
             
             <!-- organizer info section -->
             <div class="organizer-info-section">
-                          <div class="organizer-avatar">
-              <div 
-                v-if="organizer?.avatarUrl" 
-                class="avatar-image"
-                :style="{ backgroundImage: `url(${getAvatarUrl(organizer.avatarUrl)})` }"
-              ></div>
-              <span v-else class="avatar-placeholder">{{ getOrganizerInitials() }}</span>
-            </div>
+              <div class="organizer-avatar">
+                <div 
+                  v-if="organizer?.avatarUrl" 
+                  class="avatar-image"
+                  :style="{ backgroundImage: `url(${getAvatarUrl(organizer.avatarUrl)})` }"
+                ></div>
+                <span v-else class="avatar-placeholder">{{ getOrganizerInitials() }}</span>
+              </div>
               <h1 class="organizer-name">{{ organizer.name }}</h1>
               <div class="organizer-stats">
                 <span class="follower-count">{{ organizer.followerCount }} Followers</span>
                 <span class="event-count">{{ organizer.eventCount }} Events</span>
               </div>
-                            <button 
+              <button 
                 v-if="canFollow"
                 class="follow-button"
                 @click="toggleFollow"
@@ -46,7 +46,7 @@
           <!-- main content section -->
           <div class="main-content">
             <!-- left: Description section -->
-            <div class="description-section">
+            <div class="description-section card">
               <h2 class="section-title">Description</h2>
               <div class="description-content">
                 <div v-if="organizer.description" v-html="organizer.description"></div>
@@ -55,7 +55,7 @@
             </div>
             
             <!-- right: Comments section -->
-            <div class="comments-section">
+            <div class="comments-section card">
               <h2 class="section-title">Comments</h2>
               
               <div class="comments-list">
@@ -67,14 +67,14 @@
                   :key="comment.id" 
                   class="comment-item"
                 >
-                                       <div class="comment-header">
-                       <span class="comment-author">
-                         {{ comment.fromUserName || 'Anonymous' }}
-                         <span v-if="comment.fromUserType === 'ORGANIZER' || comment.fromUserType === 'organizer'" class="user-badge organizer-badge">Organizer</span>
-                         <span v-if="comment.hasPurchased" class="user-badge purchaser-badge">Purchased</span>
-                       </span>
-                       <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
-                     </div>
+                  <div class="comment-header">
+                    <span class="comment-author">
+                      {{ comment.fromUserName || 'Anonymous' }}
+                      <span v-if="comment.fromUserType === 'ORGANIZER' || comment.fromUserType === 'organizer'" class="user-badge organizer-badge">Organizer</span>
+                      <span v-if="comment.hasPurchased" class="user-badge purchaser-badge">Purchased</span>
+                    </span>
+                    <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                  </div>
                   <p class="comment-text">{{ comment.content }}</p>
                   <div class="comment-actions">
                     <button 
@@ -113,7 +113,7 @@
           </div>
           
           <!-- bottom: Event list section -->
-          <div class="events-section">
+          <div class="events-section card">
             <!-- upcoming events -->
             <div class="upcoming-events">
               <h2 class="section-title">Upcoming Events</h2>
@@ -581,16 +581,25 @@ const handleImageError = (event) => {
   padding: 0 2rem;
 }
 
+/* 统一卡片外观，供 top / description / comments / events 共用 */
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
 /* top section */
 .top-section {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
 .logo-back-section {
-  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .back-button {
@@ -719,17 +728,22 @@ const handleImageError = (event) => {
 /* main content section */
 .main-content {
   display: grid;
-  grid-template-columns: 7fr 3fr;
+  grid-template-columns: minmax(0, 7fr) minmax(320px, 3fr);
   gap: 2rem;
   margin-bottom: 2rem;
+  align-items: start;
 }
 
-.description-section,
-.comments-section {
-  background-color: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* 确保右侧列能占满自己的格子 */
+.comments-section, .description-section {
+  width: 100%;
+}
+
+/* Description 里的图文不要把布局撑爆 */
+.description-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .section-title {
@@ -948,13 +962,7 @@ const handleImageError = (event) => {
   background-color: #f4d4a3;
 }
 
-/* Events section */
-.events-section {
-  background-color: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+/* Events section - 移除重复的卡片样式，使用统一的.card类 */
 
 .upcoming-events,
 .past-events {
@@ -1142,34 +1150,19 @@ const handleImageError = (event) => {
   color: #6b7280;
 }
 
-/* responsive design */
+/* 响应式设计 */
 @media (max-width: 768px) {
   .container {
     padding: 0 1rem;
   }
   
-  .top-section {
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .organizer-info-section {
-    flex-direction: column;
-    text-align: center;
+  .card {
+    padding: 1.5rem;
   }
   
   .main-content {
     grid-template-columns: 1fr;
     gap: 1.5rem;
-  }
-  
-  .events-scroll {
-    gap: 1rem;
-  }
-  
-  .event-card {
-    min-width: 250px;
   }
   
   .organizer-name {
@@ -1181,6 +1174,12 @@ const handleImageError = (event) => {
     gap: 0.5rem;
   }
   
-
+  .events-scroll {
+    gap: 1rem;
+  }
+  
+  .event-card {
+    width: 240px;
+  }
 }
 </style> 

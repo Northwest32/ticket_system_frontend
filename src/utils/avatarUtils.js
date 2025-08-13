@@ -18,14 +18,15 @@ export function getAvatarUrl(avatarUrl) {
     return avatarUrl
   }
   
-  // if relative path, add backend base URL
-  if (avatarUrl.startsWith('/')) {
-    return 'https://sad-sarina-yezyeats-d7548659.koyeb.app' + avatarUrl
-  }
-  
   // if complete HTTP/HTTPS URL, return directly
   if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
     return avatarUrl
+  }
+  
+  // if relative path, return empty string, let component display default avatar
+  if (avatarUrl.startsWith('/')) {
+    console.warn('Local file path detected for avatar, ignoring:', avatarUrl)
+    return ''
   }
   
   return avatarUrl

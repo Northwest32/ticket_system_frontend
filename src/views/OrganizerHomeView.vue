@@ -70,7 +70,7 @@ const organizer = ref({
 
 const avatarInput = ref(null)
 
-// 加载关注者数量
+// load follower count
 const loadFollowerCount = async () => {
   try {
     if (currentUser.value?.id) {
@@ -98,7 +98,7 @@ const loadFollowerCount = async () => {
 
 
 
-// 页面加载时获取关注者数量
+// load follower count when page is mounted
 onMounted(async () => {
   await loadFollowerCount()
 })
@@ -121,7 +121,7 @@ const viewComments = () => {
   router.push('/organizer-comments')
 }
 
-// 头像编辑功能
+// avatar edit function
 const editAvatar = () => {
   avatarInput.value.click()
 }
@@ -130,37 +130,37 @@ const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
   
-  // 验证文件类型
+  // validate file type
   if (!file.type.startsWith('image/')) {
     alert('Please select an image file')
     return
   }
   
-  // 验证文件大小（限制为5MB）
+  // validate file size (limit to 5MB)
   if (file.size > 5 * 1024 * 1024) {
     alert('Image size should be less than 5MB')
     return
   }
   
   try {
-    // 使用新的Cloudinary上传功能
+    // use new Cloudinary upload function
     const response = await userApi.updateAvatar(file)
     
     if (response.code === 0) {
-      // 使用后端返回的URL
+      // use backend returned URL
       const avatarUrl = response.data.avatarUrl || response.data
       
-      // 更新本地用户信息
+      // update local user info
       if (currentUser.value) {
         currentUser.value.avatarUrl = avatarUrl
         
-        // 更新localStorage
+        // update localStorage
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         userInfo.avatarUrl = avatarUrl
         localStorage.setItem('userInfo', JSON.stringify(userInfo))
       }
       
-      // 刷新用户信息，确保所有页面同步
+      // refresh user info, ensure all pages are synchronized
       const { refreshUserInfo } = useAuth()
       await refreshUserInfo()
       
@@ -173,11 +173,11 @@ const handleAvatarChange = async (event) => {
     alert('Failed to upload avatar. Please try again.')
   }
   
-  // 清空input
+  // clear input
   event.target.value = ''
 }
 
-// 获取组织者首字母
+// get organizer initials
 const getOrganizerInitials = () => {
   const name = organizer.value?.name || organizer.value?.username || 'Organizer'
   return getAvatarInitials(name)
@@ -201,7 +201,7 @@ const getOrganizerInitials = () => {
   text-align: center;
 }
 
-/* Profile Section */
+/* profile section */
 .profile-section {
   margin-bottom: 3rem;
 }

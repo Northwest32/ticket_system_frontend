@@ -51,9 +51,8 @@ export const userApi = {
       // 1) upload to Cloudinary
       const { url, publicId } = await uploadAvatar(file);
       
-      // 2) save URL to backend - using FormData format, including original file
+      // 2) save URL to backend - only send Cloudinary URL, no local file
       const formData = new FormData();
-      formData.append('avatar', file); // Add original file to satisfy backend requirement
       formData.append('avatarUrl', url);
       formData.append('publicId', publicId);
       
