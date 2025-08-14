@@ -46,3 +46,29 @@ export const clearRedirect = (router) => {
     })
   }
 }
+
+/**
+ * 安全的重定向函数，确保用户状态已加载
+ * @param {Object} router - Vue Router实例
+ * @param {string} path - 要跳转的路径
+ * @param {Function} checkAuth - 检查认证状态的函数
+ */
+export const safeRedirect = async (router, path, checkAuth) => {
+  // 等待认证状态加载
+  let attempts = 0
+  const maxAttempts = 10
+  
+  while (attempts < maxAttempts) {
+    if (checkAuth()) {
+      console.log('[safeRedirect] Auth state ready, redirecting to:', path)
+      router.replace(path)
+      return
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 50))
+    attempts++
+  }
+  
+  console.warn('[safeRedirect] Auth state not ready after max attempts, redirecting anyway')
+  router.replace(path)
+}

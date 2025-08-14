@@ -439,9 +439,14 @@ const onPageActivated = () => {
 }
 
 onMounted(async () => {
-  // check if user is logged in
+  // check if user is logged in - 给一点时间让状态加载
   if (!currentUser.value) {
-    router.push('/login')
+    // 等待一小段时间，让登录状态有机会加载
+    await new Promise(resolve => setTimeout(resolve, 100))
+    if (!currentUser.value) {
+      router.push('/login')
+      return
+    }
   }
   
 // if organizer, default to orders tab (because cannot follow or bookmark)
