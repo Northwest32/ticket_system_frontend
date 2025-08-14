@@ -56,7 +56,7 @@
   <script setup>
   import { ref, nextTick, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { login, useAuth } from '../composables/useAuth'
+import { login, useAuth, isAuthenticated, currentUser } from '../composables/useAuth'
 import { getHomePath } from '../utils/userType'
 import { getRedirectPath, clearRedirect } from '../utils/redirectUtils'
 import Header from '../components/Header.vue'
@@ -82,8 +82,8 @@ const hasRedirected = ref(false) // prevent duplicate redirect
       // Token and user info are already stored in realLogin, just update the reactive state
       // no need to call login() function again, because realLogin has already handled the storage
       // only need to update the reactive state
-      isLoggedIn.value = true
-      userInfo.value = response.user
+      // call login function to update the reactive state
+      login(response.token, response.user)
       
       // check if there is a redirect path
       const redirectPath = getRedirectPath(route)
