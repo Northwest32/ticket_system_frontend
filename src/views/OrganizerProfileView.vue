@@ -564,6 +564,11 @@ const handleImageError = (event) => {
 </script>
 
 <style scoped>
+/* 全局设置 */
+* {
+  box-sizing: border-box;
+}
+
 .organizer-profile-page {
   min-height: 100vh;
   background-color: #f5f5f5;
@@ -747,6 +752,7 @@ const handleImageError = (event) => {
   display: block;                /* 块级显示 */
   margin: 1rem 0;                /* 上下间距 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+  box-sizing: border-box;        /* 确保padding和border包含在宽度内 */
 }
 
 
@@ -765,6 +771,9 @@ const handleImageError = (event) => {
   overflow: hidden;              /* 防止内容溢出 */
   word-wrap: break-word;         /* 长单词换行 */
   overflow-wrap: break-word;     /* 现代浏览器长单词换行 */
+  hyphens: auto;                 /* 自动连字符 */
+  max-width: 100%;               /* 确保不超出容器 */
+  box-sizing: border-box;        /* 确保padding和border包含在宽度内 */
 }
 
 .description-content p {
@@ -903,6 +912,9 @@ const handleImageError = (event) => {
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .comment-actions {
@@ -1054,6 +1066,11 @@ const handleImageError = (event) => {
    /* -webkit-line-clamp: 2;     最多显示两行 */
   -webkit-box-orient: vertical;
   word-break: break-word;     /* 防止长单词撑开 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 
@@ -1182,12 +1199,12 @@ const handleImageError = (event) => {
   }
   
   .card {
-    padding: 1.5rem;
+    padding: 1rem;
   }
   
   .main-content {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
   
   .organizer-name {
@@ -1205,6 +1222,163 @@ const handleImageError = (event) => {
   
   .event-card {
     width: 240px;
+  }
+  
+  /* 修复description内容溢出问题 */
+  .description-content {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+  }
+  
+  .description-content img {
+    max-width: 100%;
+    height: auto;
+    width: 100%;
+  }
+  
+  /* 修复comment内容溢出问题 */
+  .comments-list {
+    max-height: 300px;
+  }
+  
+  .comment-text {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+  }
+  
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .comment-author {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .comment-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  /* 修复事件卡片在小屏幕上的显示 */
+  .event-title {
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+  
+  .event-info {
+    padding: 0.75rem;
+  }
+  
+  .event-meta {
+    gap: 0.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .event-date,
+  .event-location {
+    font-size: 0.75rem;
+  }
+}
+
+/* 更小屏幕的适配 */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+  
+  .card {
+    padding: 0.75rem;
+  }
+  
+  .organizer-profile-main {
+    padding: 1rem 0;
+  }
+  
+  .organizer-name {
+    font-size: 1.3rem;
+  }
+  
+  .organizer-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .avatar-placeholder {
+    font-size: 1.2rem;
+  }
+  
+  .follow-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .description-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  
+  .comments-list {
+    max-height: 250px;
+  }
+  
+  .comment-item {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .comment-text {
+    font-size: 0.85rem;
+  }
+  
+  .comment-input {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .add-comment-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .event-card {
+    width: 200px;
+  }
+  
+  .event-image {
+    height: 100px;
+  }
+  
+  .event-info {
+    padding: 0.5rem;
+  }
+  
+  .event-title {
+    font-size: 0.85rem;
+  }
+  
+  .event-category {
+    font-size: 0.7rem;
+  }
+  
+  .event-date,
+  .event-location {
+    font-size: 0.7rem;
+  }
+  
+  .event-price {
+    font-size: 0.8rem;
   }
 }
 </style> 

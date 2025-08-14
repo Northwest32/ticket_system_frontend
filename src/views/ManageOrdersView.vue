@@ -57,20 +57,6 @@
             </button>
             <button 
               class="filter-button"
-              :class="{ active: activeFilter === 'pending' }"
-              @click="setFilter('pending')"
-            >
-              Pending
-            </button>
-            <button 
-              class="filter-button"
-              :class="{ active: activeFilter === 'completed' }"
-              @click="setFilter('completed')"
-            >
-              Completed
-            </button>
-            <button 
-              class="filter-button"
               :class="{ active: activeFilter === 'refund' }"
               @click="setFilter('refund')"
             >
@@ -278,12 +264,6 @@ const filteredOrders = computed(() => {
   // Apply status filter
   if (activeFilter.value !== 'all') {
     switch (activeFilter.value) {
-      case 'pending':
-        filtered = filtered.filter(order => order.status === 'PENDING' || order.status === 'PAID')
-        break
-      case 'completed':
-        filtered = filtered.filter(order => order.status === 'COMPLETED')
-        break
       case 'refund':
         filtered = filtered.filter(order => order.refundRequest)
         break
