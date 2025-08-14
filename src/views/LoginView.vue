@@ -54,11 +54,11 @@
   </template>
   
   <script setup>
-  import { ref, nextTick } from 'vue'
+  import { ref, nextTick, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { login, useAuth, isAuthenticated, currentUser } from '../composables/useAuth'
+import { login, useAuth } from '../composables/useAuth'
 import { getHomePath } from '../utils/userType'
-import { getRedirectPath, clearRedirect, safeRedirect } from '../utils/redirectUtils'
+import { getRedirectPath, clearRedirect } from '../utils/redirectUtils'
 import Header from '../components/Header.vue'
 
   const router = useRouter()
@@ -67,29 +67,40 @@ const { loginUser } = useAuth()
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
+const hasRedirected = ref(false) // prevent duplicate redirect 
 
   const handleLogin = async () => {
+    if (isLoading.value || hasRedirected.value) {
+      return // prevent duplicate submission and redirect
+    }
+    
     isLoading.value = true
     
     try {
       const response = await loginUser(email.value, password.value)
       
-      // Token is already stored in realLogin, only store user information
-      login(response.token, response.user)
+      // Token and user info are already stored in realLogin, just update the reactive state
+      // no need to call login() function again, because realLogin has already handled the storage
+      // only need to update the reactive state
+      isLoggedIn.value = true
+      userInfo.value = response.user
       
-      // 检查是否有重定向路径
+      // check if there is a redirect path
       const redirectPath = getRedirectPath(route)
       
-      if (redirectPath) {
-        // 如果有重定向路径，使用安全跳转
+      if (redirectPath && !hasRedirected.value) {
+        // if there is a redirect path, redirect directly
         console.log('[LoginView] Redirecting to:', redirectPath)
-        await safeRedirect(router, redirectPath, () => isAuthenticated.value && currentUser.value)
-        // 清除重定向参数
+        hasRedirected.value = true
+        // redirect directly, do not use safeRedirect to avoid complex state check
+        router.push(redirectPath)
+        // clear redirect parameters
         clearRedirect(router)
-      } else {
-        // 否则跳转到默认首页
+      } else if (!hasRedirected.value) {
+        // otherwise redirect to default home page
         const homePath = getHomePath(response.user.userType)
-        await safeRedirect(router, homePath, () => isAuthenticated.value && currentUser.value)
+        hasRedirected.value = true
+        router.push(homePath)
       }
     } catch (error) {
       console.error('Login failed:', error)
@@ -108,6 +119,11 @@ const isLoading = ref(false)
   const goToForgetPassword = () => {
     router.push('/forget-password')
   }
+  
+  // reset flag when component is unmounted
+  onUnmounted(() => {
+    hasRedirected.value = false
+  })
   </script>
   
   <style scoped>

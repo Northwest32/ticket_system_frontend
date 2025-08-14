@@ -56,12 +56,13 @@ export const clearRedirect = (router) => {
 export const safeRedirect = async (router, path, checkAuth) => {
   // 等待认证状态加载
   let attempts = 0
-  const maxAttempts = 10
+  const maxAttempts = 20 // 增加最大尝试次数
   
   while (attempts < maxAttempts) {
     if (checkAuth()) {
       console.log('[safeRedirect] Auth state ready, redirecting to:', path)
-      router.replace(path)
+      // 使用 push 而不是 replace，避免路由冲突
+      router.push(path)
       return
     }
     
@@ -70,5 +71,5 @@ export const safeRedirect = async (router, path, checkAuth) => {
   }
   
   console.warn('[safeRedirect] Auth state not ready after max attempts, redirecting anyway')
-  router.replace(path)
+  router.push(path)
 }
