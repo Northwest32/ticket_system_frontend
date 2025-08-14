@@ -85,6 +85,9 @@ const hasRedirected = ref(false) // prevent duplicate redirect
       // call login function to update the reactive state
       login(response.token, response.user)
       
+      // wait a bit for reactive state to update
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       // check if there is a redirect path
       const redirectPath = getRedirectPath(route)
       
@@ -92,15 +95,38 @@ const hasRedirected = ref(false) // prevent duplicate redirect
         // if there is a redirect path, redirect directly
         console.log('[LoginView] Redirecting to:', redirectPath)
         hasRedirected.value = true
-        // redirect directly, do not use safeRedirect to avoid complex state check
-        router.push(redirectPath)
-        // clear redirect parameters
-        clearRedirect(router)
+        
+        try {
+          // redirect directly, do not use safeRedirect to avoid complex state check
+          const redirectPromise = router.push(redirectPath)
+          
+          // add timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Router push timeout')), 2000)
+          })
+          
+          await Promise.race([redirectPromise, timeoutPromise])
+          console.log('[LoginView] Router push completed successfully')
+          // clear redirect parameters
+          clearRedirect(router)
+        } catch (error) {
+          console.error('[LoginView] Router push failed or timed out:', error)
+          // fallback: use window.location for hard redirect
+          console.log('[LoginView] Using window.location fallback')
+          window.location.href = redirectPath
+        }
       } else if (!hasRedirected.value) {
         // otherwise redirect to default home page
         const homePath = getHomePath(response.user.userType)
+        console.log('[LoginView] Redirecting to home page:', homePath)
         hasRedirected.value = true
-        router.push(homePath)
+        
+        try {
+          await router.push(homePath)
+          console.log('[LoginView] Home page redirect completed')
+        } catch (error) {
+          console.error('[LoginView] Home page redirect failed:', error)
+        }
       }
     } catch (error) {
       console.error('Login failed:', error)
