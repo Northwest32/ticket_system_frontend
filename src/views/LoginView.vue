@@ -55,12 +55,14 @@
   
   <script setup>
   import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { login, useAuth } from '../composables/useAuth'
 import { getHomePath } from '../utils/userType'
+import { getRedirectPath, clearRedirect } from '../utils/redirectUtils'
 import Header from '../components/Header.vue'
 
   const router = useRouter()
+const route = useRoute()
 const { loginUser } = useAuth()
 const email = ref('')
 const password = ref('')
@@ -77,8 +79,20 @@ const isLoading = ref(false)
       
       // Wait a bit for state to update, then redirect
       setTimeout(() => {
-        const homePath = getHomePath(response.user.userType)
-        router.push(homePath)
+        // 检查是否有重定向路径
+        const redirectPath = getRedirectPath(route)
+        
+        if (redirectPath) {
+          // 如果有重定向路径，跳转到该路径
+          console.log('[LoginView] Redirecting to:', redirectPath)
+          router.push(redirectPath)
+          // 清除重定向参数
+          clearRedirect(router)
+        } else {
+          // 否则跳转到默认首页
+          const homePath = getHomePath(response.user.userType)
+          router.push(homePath)
+        }
       }, 100)
     } catch (error) {
       console.error('Login failed:', error)

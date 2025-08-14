@@ -35,19 +35,21 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { isAuthenticated, logout, currentUser } from '../composables/useAuth'
 import { getHomePath } from '../utils/userType'
+import { redirectToLogin } from '../utils/redirectUtils'
 
 const router = useRouter()
+const route = useRoute()
 
 const goHome = () => {
   router.push('/')
 }
 
 const handleAuthClick = () => {
-  // Navigate to login page
-  router.push('/login')
+  // Navigate to login page with redirect
+  redirectToLogin(router, route.path, route.query)
 }
 
 const goToAccount = () => {

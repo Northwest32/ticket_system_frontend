@@ -226,6 +226,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { redirectToLogin } from '../utils/redirectUtils'
 import { seckillApi, eventApi, orderApi } from '../services/api'
 import Header from '../components/Header.vue'
 
@@ -264,7 +265,7 @@ const maxQuantity = computed(() => {
 onMounted(async () => {
   // check if user is logged in
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   

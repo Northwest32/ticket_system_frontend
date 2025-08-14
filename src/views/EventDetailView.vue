@@ -205,6 +205,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { redirectToLogin } from '../utils/redirectUtils'
 import { useEvent } from '../composables/useEvent'
 import { canBuyTickets, canBookmarkEvents, canFollowOrganizers, getPermissionMessage } from '../utils/permissions'
 import { followApi, bookmarkApi, commentApi } from '../services/api'
@@ -348,7 +349,7 @@ const loadBookmarkStatus = async (eventId) => {
 
 const toggleFollow = async () => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -385,7 +386,7 @@ const toggleFollow = async () => {
 
 const toggleBookmark = async () => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -424,7 +425,7 @@ const toggleBookmark = async () => {
 
 const handleBuyClick = () => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -445,7 +446,7 @@ const isSubmitting = ref(false)
 
 const addComment = async () => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -496,7 +497,7 @@ const addComment = async () => {
 
 const deleteComment = async (commentId) => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -525,7 +526,7 @@ const deleteComment = async (commentId) => {
 
 const replyToComment = (commentId) => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   

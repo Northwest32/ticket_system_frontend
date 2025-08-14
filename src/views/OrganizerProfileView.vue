@@ -213,6 +213,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { redirectToLogin } from '../utils/redirectUtils'
 import { canFollowOrganizers } from '../utils/permissions'
 import { organizerProfileApi, followApi, commentApi, eventApi, userApi } from '../services/api'
 import { getAvatarUrl, getAvatarInitials } from '../utils/avatarUtils'
@@ -405,7 +406,7 @@ const loadFollowStatus = async (organizerId) => {
 
 const toggleFollow = async () => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -448,7 +449,7 @@ const goToEvent = (eventId) => {
 
 const addComment = async () => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -498,7 +499,7 @@ const addComment = async () => {
 
 const deleteComment = async (commentId) => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
@@ -527,7 +528,7 @@ const deleteComment = async (commentId) => {
 
 const replyToComment = (commentId) => {
   if (!isAuthenticated.value) {
-    router.push('/login')
+    redirectToLogin(router, route.path, route.query)
     return
   }
   
