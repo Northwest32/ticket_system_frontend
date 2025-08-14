@@ -572,6 +572,12 @@ const handleImageError = (event) => {
 .organizer-profile-page {
   min-height: 100vh;
   background-color: #f5f5f5;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .organizer-profile-main {
@@ -740,19 +746,24 @@ const handleImageError = (event) => {
 /* 确保右侧列能占满自己的格子 */
 .comments-section, .description-section {
   width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Description 里的图文不要把布局撑爆 */
 .description-content img {
-  max-width: 100%;              /* 限制最大宽度为父元素宽度 */
-  height: auto;                 /* 高度自动，保持比例 */
-  width: 100%;                  /* 宽度100%，自适应容器 */
+  max-width: 100% !important;   /* 强制限制最大宽度为父元素宽度 */
+  height: auto !important;      /* 高度自动，保持比例 */
+  width: auto !important;       /* 宽度自动，不超过容器 */
+  max-height: 300px;            /* 限制最大高度 */
   border-radius: 8px;
   object-fit: cover;             /* 保持比例，裁剪超出部分 */
   display: block;                /* 块级显示 */
   margin: 1rem 0;                /* 上下间距 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
   box-sizing: border-box;        /* 确保padding和border包含在宽度内 */
+  overflow: hidden;              /* 隐藏超出部分 */
 }
 
 
@@ -774,6 +785,8 @@ const handleImageError = (event) => {
   hyphens: auto;                 /* 自动连字符 */
   max-width: 100%;               /* 确保不超出容器 */
   box-sizing: border-box;        /* 确保padding和border包含在宽度内 */
+  width: 100%;                   /* 明确设置宽度 */
+  overflow-x: hidden;            /* 防止水平滚动 */
 }
 
 .description-content p {
@@ -1233,9 +1246,10 @@ const handleImageError = (event) => {
   }
   
   .description-content img {
-    max-width: 100%;
-    height: auto;
-    width: 100%;
+    max-width: 100% !important;
+    height: auto !important;
+    width: auto !important;
+    max-height: 250px;
   }
   
   /* 修复comment内容溢出问题 */
@@ -1327,6 +1341,14 @@ const handleImageError = (event) => {
   .description-content {
     font-size: 0.9rem;
     line-height: 1.6;
+    overflow-x: hidden;
+  }
+  
+  .description-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    width: auto !important;
+    max-height: 200px;
   }
   
   .comments-list {
