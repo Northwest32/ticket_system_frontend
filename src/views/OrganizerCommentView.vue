@@ -39,12 +39,12 @@
             <div v-else class="comments-list">
               <div 
                 v-for="comment in givenComments" 
-                :key="comment.id" 
+                :key="comment._id || comment.id" 
                 class="comment-item"
               >
                 <div class="comment-header">
                   <div class="comment-info">
-                    <span class="comment-id">ID: {{ comment.id }}</span>
+                    <span class="comment-id">ID: {{ comment._id || comment.id }}</span>
                     <span class="comment-date">Date: {{ formatDate(comment.date) }}</span>
                   </div>
                 </div>
@@ -55,7 +55,7 @@
                 <div class="comment-actions">
                   <button 
                     class="delete-comment-button"
-                    @click="deleteComment(comment.id)"
+                    @click="deleteComment(comment._id || comment.id)"
                   >
                     Delete
                   </button>
@@ -65,7 +65,7 @@
                 <div v-if="comment.replies && comment.replies.length > 0" class="replies-section">
                   <div 
                     v-for="reply in comment.replies" 
-                    :key="reply.id" 
+                    :key="reply._id || reply.id" 
                     class="reply-item"
                   >
                     <div class="reply-header">
@@ -89,12 +89,12 @@
             <div v-else class="comments-list">
               <div 
                 v-for="comment in receivedComments" 
-                :key="comment.id" 
+                :key="comment._id || comment.id" 
                 class="comment-item"
               >
                 <div class="comment-header">
                   <div class="comment-info">
-                    <span class="comment-id">ID: {{ comment.id }}</span>
+                    <span class="comment-id">ID: {{ comment._id || comment.id }}</span>
                     <span class="comment-date">Date: {{ formatDate(comment.date) }}</span>
                   </div>
                 </div>
@@ -109,14 +109,14 @@
                 <div class="comment-actions">
                   <button 
                     class="reply-comment-btn"
-                    @click.stop.prevent="onReplyClick($event, comment.id)"
+                    @click.stop.prevent="onReplyClick($event, comment._id || comment.id)"
                   >
                     Reply
                   </button>
                 </div>
                 
                                   <!-- 回复输入框 -->
-                  <div v-if="String(replyingTo) === String(comment.id)" class="reply-input-section">
+                  <div v-if="String(replyingTo) === String(comment._id || comment.id)" class="reply-input-section">
                     <textarea 
                       v-model="replyContent" 
                       placeholder="Write your reply here..."
@@ -126,7 +126,7 @@
                     <div class="reply-actions">
                       <button 
                         class="submit-reply-btn" 
-                        @click="submitReply(comment.id)"
+                        @click="submitReply(comment._id || comment.id)"
                         :disabled="isSubmittingReply"
                       >
                         {{ isSubmittingReply ? 'Submitting...' : 'Submit Reply' }}
@@ -144,7 +144,7 @@
                   <div v-if="comment.replies && comment.replies.length > 0" class="replies-section">
                     <div 
                       v-for="reply in comment.replies" 
-                      :key="reply.id" 
+                      :key="reply._id || reply.id" 
                       class="reply-item"
                     >
                       <div class="reply-header">
@@ -387,7 +387,13 @@ const submitReply = async (commentId) => {
       ...givenComments.value,
       ...receivedComments.value,
     ];
-    const parent = allParents.find(c => String(c.id) === String(commentId));
+    // 使用规范化后的 ID 进行查找
+    const normalizedCommentId = normalizeId(commentId);
+    const parent = allParents.find(c => {
+      // 优先使用 _id，如果没有则使用 id
+      const commentId = c._id ?? c.id;
+      return String(commentId) === String(normalizedCommentId);
+    });
 
     const commentData = {
       content: replyContent.value.trim(),
@@ -400,6 +406,8 @@ const submitReply = async (commentId) => {
     }
 
     console.log('[OrganizerCommentView] Reply comment data:', commentData)
+    console.log('[OrganizerCommentView] Parent comment found:', parent)
+    console.log('[OrganizerCommentView] Normalized commentId:', normalizedCommentId)
 
     const response = await commentApi.createComment(commentData)
 
