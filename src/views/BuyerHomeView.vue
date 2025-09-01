@@ -765,16 +765,32 @@ const loadGivenComments = async () => {
       const unique = list.filter((c, i, self) => i === self.findIndex(x => String(x.id) === String(c.id)))
 
       // 按 parentCommentId 是否为空拆分
-      const topLevel = unique.filter(c => c.parentCommentId == null || String(c.parentCommentId) === '')
+      const topLevel = unique.filter(c => {
+        const pid = c.parentCommentId
+        return pid == null || pid === '' || (typeof pid === 'object' && !pid.id)
+      })
 
       // 建 parentId -> replies 映射（统一用 String 做 key）
       const repliesMap = new Map()
       unique.forEach(c => {
         const pid = c.parentCommentId
-        if (pid != null && String(pid) !== '') {
-          const key = String(pid)
-          if (!repliesMap.has(key)) repliesMap.set(key, [])
-          repliesMap.get(key).push(c)
+        if (pid != null && pid !== '') {
+          // 处理 parentCommentId 可能是 object 的情况
+          let actualPid
+          if (typeof pid === 'object' && pid.id) {
+            actualPid = pid.id
+          } else if (typeof pid === 'object') {
+            // 如果 object 没有 id 字段，尝试其他可能的字段
+            actualPid = pid.commentId || pid.parentId || pid._id || null
+          } else {
+            actualPid = pid
+          }
+          
+          if (actualPid != null) {
+            const key = String(actualPid)
+            if (!repliesMap.has(key)) repliesMap.set(key, [])
+            repliesMap.get(key).push(c)
+          }
         }
       })
 
