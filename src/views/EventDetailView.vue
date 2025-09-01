@@ -153,11 +153,36 @@
                          Delete
                        </button>
                        <button 
-                         class="reply-button"
-                         @click="replyToComment(comment.id)"
+                         class="reply-btn"
+                         @click.stop.prevent="onReplyClick($event, comment.id)"
                        >
                          Reply
                        </button>
+                     </div>
+                     
+                     <!-- 回复输入框 -->
+                     <div v-if="String(replyingTo) === String(comment.id)" class="reply-input-section">
+                       <textarea 
+                         v-model="replyContent" 
+                         placeholder="Write your reply here..."
+                         class="reply-input"
+                         rows="3"
+                       ></textarea>
+                       <div class="reply-actions">
+                         <button 
+                           class="submit-reply-btn" 
+                           @click="submitReply(comment.id)"
+                           :disabled="isSubmittingReply"
+                         >
+                           {{ isSubmittingReply ? 'Submitting...' : 'Submit Reply' }}
+                         </button>
+                         <button 
+                           class="cancel-reply-btn" 
+                           @click="cancelReply"
+                         >
+                           Cancel
+                         </button>
+                       </div>
                      </div>
                   </div>
                 </div>
@@ -222,6 +247,9 @@ const isFollowing = ref(false)
 const isBookmarked = ref(false)
 const comments = ref([])
 const newComment = ref('')
+const replyingTo = ref(null)
+const replyContent = ref('')
+const isSubmittingReply = ref(false)
 
 // computed properties
 const isSoldOut = computed(() => {
@@ -282,6 +310,19 @@ onMounted(async () => {
     console.error('[EventDetailView] Failed to load event:', error)
     // can show error message to user
   }
+  
+  // 保底：在捕获阶段屏蔽旧监听（可选）
+  window.addEventListener(
+    'click',
+    (e) => {
+      const t = e.target;
+      if (t && t.classList && t.classList.contains('reply-button')) {
+        e.stopImmediatePropagation?.();
+        e.preventDefault?.();
+      }
+    },
+    true // 捕获阶段，先于冒泡触发
+  );
 })
 
 // methods
@@ -524,16 +565,69 @@ const deleteComment = async (commentId) => {
   }
 }
 
-const replyToComment = (commentId) => {
+const onReplyClick = (e, commentId) => {
+  // 阻断同一元素上的其他监听器（关键）
+  if (e && typeof e.stopImmediatePropagation === 'function') {
+    e.stopImmediatePropagation();
+  }
+  
   if (!isAuthenticated.value) {
     redirectToLogin(router, route.path, route.query)
     return
   }
   
-  // here can implement reply function
-  // can open a reply input box or redirect to reply page
-  console.log('Reply to comment:', commentId)
-  alert('Reply functionality will be implemented here')
+  replyingTo.value = commentId;
+  replyContent.value = '';
+  console.log('[EventDetailView] onReplyClick -> replyingTo =', replyingTo.value);
+}
+
+const submitReply = async (commentId) => {
+  if (!replyContent.value.trim()) {
+    alert('Please enter a reply message');
+    return;
+  }
+  
+  try {
+    isSubmittingReply.value = true;
+    console.log('[EventDetailView] Submitting reply to comment:', commentId);
+    
+    // 创建回复评论
+    const commentData = {
+      content: replyContent.value.trim(),
+      fromUserId: currentUser.value.id,
+      toEventId: event.value.id,
+      toOrganizerId: null, // null when replying to event comment
+      rating: null, // not set rating
+      parentCommentId: commentId // 设置父评论ID，表示这是回复
+    }
+    
+    console.log('[EventDetailView] Reply comment data:', commentData)
+    
+    const response = await commentApi.createComment(commentData)
+    
+    if (response && response.code === 0) {
+      console.log('[EventDetailView] Reply submitted successfully');
+      // 重新加载评论列表
+      await loadComments(event.value.id);
+      // 重置回复状态
+      replyingTo.value = null;
+      replyContent.value = '';
+      alert('Reply submitted successfully!');
+    } else {
+      alert(response?.message || 'Failed to submit reply');
+    }
+  } catch (error) {
+    console.error('[EventDetailView] Error submitting reply:', error);
+    alert('Failed to submit reply. Please try again.');
+  } finally {
+    isSubmittingReply.value = false;
+  }
+}
+
+const cancelReply = () => {
+  replyingTo.value = null;
+  replyContent.value = '';
+  console.log('[EventDetailView] Reply cancelled');
 }
 
 const loadComments = async (eventId) => {
@@ -1053,7 +1147,7 @@ const getOrganizerInitials = () => {
   background-color: #b91c1c;
 }
 
-.reply-button {
+.reply-btn {
   background-color: #FAE3C6;
   color: #8B4513;
   border: none;
@@ -1065,8 +1159,73 @@ const getOrganizerInitials = () => {
   transition: background-color 0.2s ease;
 }
 
-.reply-button:hover {
+.reply-btn:hover {
   background-color: #f4d4a3;
+}
+
+.reply-input-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.reply-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.reply-input:focus {
+  outline: none;
+  border-color: #FAE3C6;
+  box-shadow: 0 0 0 3px rgba(250, 227, 198, 0.3);
+}
+
+.reply-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.submit-reply-btn {
+  background-color: #FAE3C6;
+  color: #8B4513;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.submit-reply-btn:hover:not(:disabled) {
+  background-color: #f4d4a3;
+}
+
+.submit-reply-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.cancel-reply-btn {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-reply-btn:hover {
+  background-color: #b91c1c;
 }
 
 .add-comment-section {
