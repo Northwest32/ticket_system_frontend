@@ -234,12 +234,12 @@
               <div v-else class="comments-list">
                 <div 
                   v-for="comment in givenComments" 
-                  :key="comment.id" 
+                  :key="comment._id || comment.id" 
                   class="comment-item"
                 >
                   <div class="comment-header">
                     <div class="comment-info">
-                      <span class="comment-id">ID: {{ comment.id }}</span>
+                      <span class="comment-id">ID: {{ comment._id || comment.id }}</span>
                       <span class="comment-date">Date: {{ formatDate(comment.date) }}</span>
                     </div>
                   </div>
@@ -250,7 +250,7 @@
                   <div class="comment-actions">
                     <button 
                       class="delete-comment-button"
-                      @click="deleteComment(comment.id)"
+                      @click="deleteComment(comment._id || comment.id)"
                     >
                       Delete
                     </button>
@@ -267,12 +267,12 @@
               <div v-else class="comments-list">
                 <div 
                   v-for="comment in receivedComments" 
-                  :key="comment.id" 
+                  :key="comment._id || comment.id" 
                   class="comment-item"
                 >
                   <div class="comment-header">
                     <div class="comment-info">
-                      <span class="comment-id">ID: {{ comment.id }}</span>
+                      <span class="comment-id">ID: {{ comment._id || comment.id }}</span>
                       <span class="comment-date">Date: {{ formatDate(comment.date) }}</span>
                     </div>
                   </div>
@@ -283,14 +283,14 @@
                   <div class="comment-actions">
                     <button 
                       class="reply-comment-btn"
-                      @click.stop.prevent="onReplyClick($event, comment.id)"
+                      @click.stop.prevent="onReplyClick($event, comment._id || comment.id)"
                     >
                       Reply
                     </button>
                   </div>
                   
                   <!-- 回复输入框 -->
-                  <div v-if="String(replyingTo) === String(comment.id)" class="reply-input-section">
+                  <div v-if="String(replyingTo) === String(comment._id || comment.id)" class="reply-input-section">
                     <textarea 
                       v-model="replyContent" 
                       placeholder="Write your reply here..."
@@ -300,7 +300,7 @@
                     <div class="reply-actions">
                       <button 
                         class="submit-reply-btn" 
-                        @click="submitReply(comment.id)"
+                        @click="submitReply(comment._id || comment.id)"
                         :disabled="isSubmittingReply"
                       >
                         {{ isSubmittingReply ? 'Submitting...' : 'Submit Reply' }}
@@ -318,7 +318,7 @@
                   <div v-if="comment.replies && comment.replies.length > 0" class="replies-section">
                     <div 
                       v-for="reply in comment.replies" 
-                      :key="reply.id" 
+                      :key="reply._id || reply.id" 
                       class="reply-item"
                     >
                       <div class="reply-header">
