@@ -60,6 +60,23 @@
                     Delete
                   </button>
                 </div>
+                
+                <!-- 显示回复评论 -->
+                <div v-if="comment.replies && comment.replies.length > 0" class="replies-section">
+                  <div 
+                    v-for="reply in comment.replies" 
+                    :key="reply.id" 
+                    class="reply-item"
+                  >
+                    <div class="reply-header">
+                      <span class="reply-author">
+                        {{ reply.fromUserName || 'Anonymous' }}
+                      </span>
+                      <span class="reply-date">{{ formatDate(reply.date) }}</span>
+                    </div>
+                    <p class="reply-text">{{ reply.text }}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -202,6 +219,9 @@ const loadGivenComments = async () => {
           id: c.id,
           date: c.createdAt,
           text: c.content,
+          // 加上这两行，保留目标
+          toEventId: c.toEventId ?? null,
+          toOrganizerId: c.toOrganizerId ?? null,
           target: c.toEventId ? `Event ID: ${c.toEventId}` : 
                   c.toOrganizerId ? `Organizer ID: ${c.toOrganizerId}` : 'Unknown Target',
           replies: (repliesMap.get(String(c.id)) || [])
@@ -210,7 +230,8 @@ const loadGivenComments = async () => {
               id: reply.id,
               date: reply.createdAt,
               text: reply.content,
-              fromUserName: reply.fromUserName
+              fromUserName: reply.fromUserName,
+              fromUserType: reply.fromUserType
             }))
         }))
 
@@ -238,14 +259,55 @@ const loadReceivedComments = async () => {
     loading.value = true
     const response = await commentApi.getReceivedComments(currentUser.value.id)
     if (response && response.code === 0 && response.data) {
-             receivedComments.value = response.data.map(comment => ({
-         id: comment.id,
-         date: comment.createdAt,
-         text: comment.content,
-         author: comment.fromUserName || `User ID: ${comment.fromUserId}`,
-         authorType: comment.fromUserType,
-         hasPurchased: comment.hasPurchased
-       }))
+      const list = response.data
+
+      // 去重
+      const unique = list.filter((c, i, self) => i === self.findIndex(x => String(x.id) === String(c.id)))
+
+      // 拆分顶层/回复
+      const topLevel = unique.filter(c => c.parentCommentId == null || String(c.parentCommentId) === '')
+      const repliesMap = new Map()
+      unique.forEach(c => {
+        const pid = c.parentCommentId
+        if (pid != null && String(pid) !== '') {
+          const key = String(pid)
+          if (!repliesMap.has(key)) repliesMap.set(key, [])
+          repliesMap.get(key).push(c)
+        }
+      })
+
+      // 组装（保留目标）
+      receivedComments.value = topLevel
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map(c => ({
+          id: c.id,
+          date: c.createdAt,
+          text: c.content,
+          author: c.fromUserName || `User ID: ${c.fromUserId}`,
+          authorType: c.fromUserType,
+          hasPurchased: c.hasPurchased,
+          // 关键：保留目标，供回复用
+          toEventId: c.toEventId ?? null,
+          toOrganizerId: c.toOrganizerId ?? null,
+
+          replies: (repliesMap.get(String(c.id)) || [])
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+            .map(r => ({
+              id: r.id,
+              content: r.content,
+              createdAt: r.createdAt,
+              fromUserName: r.fromUserName,
+              fromUserType: r.fromUserType
+            }))
+        }))
+
+      console.table(unique.map(c => ({
+        id: c.id,
+        pid: c.parentCommentId,
+        types: `${typeof c.id}/${typeof c.parentCommentId}`,
+        toEventId: c.toEventId,
+        toOrganizerId: c.toOrganizerId
+      })))
     } else {
       receivedComments.value = []
     }
@@ -297,34 +359,38 @@ const submitReply = async (commentId) => {
     alert('Please enter a reply message');
     return;
   }
-  
+
   try {
     isSubmittingReply.value = true;
-    console.log('[OrganizerCommentView] Submitting reply to comment:', commentId);
-    
-    // 创建回复评论
+
+    // 在两个列表里都找一下父评论
+    const allParents = [
+      ...givenComments.value,
+      ...receivedComments.value,
+    ];
+    const parent = allParents.find(c => String(c.id) === String(commentId));
+
     const commentData = {
       content: replyContent.value.trim(),
       fromUserId: Number(currentUser.value.id),
-      toEventId: null, // null when replying to organizer comment
-      toOrganizerId: null, // null when replying to organizer comment
-      rating: null, // not set rating
-      parentCommentId: Number(commentId) // 关键：转成 number
+      // 关键：继承父评论的目标（哪个有值用哪个）
+      toEventId: parent?.toEventId ?? null,
+      toOrganizerId: parent?.toOrganizerId ?? null,
+      rating: null,
+      parentCommentId: Number(commentId)
     }
-    
+
     console.log('[OrganizerCommentView] Reply comment data:', commentData)
-    
+
     const response = await commentApi.createComment(commentData)
-    
+
     if (response && response.code === 0) {
-      console.log('[OrganizerCommentView] Reply submitted successfully');
-      // 重新加载评论列表
+      // 重新加载当前页签
       if (commentTab.value === 'given') {
         await loadGivenComments();
       } else {
         await loadReceivedComments();
       }
-      // 重置回复状态
       replyingTo.value = null;
       replyContent.value = '';
       alert('Reply submitted successfully!');
