@@ -175,6 +175,27 @@ import Header from '../components/Header.vue'
 const router = useRouter()
 const { currentUser } = useAuth()
 
+// 把各种可能的 id / parentId 统一成 number，避免 number/object 不匹配
+const normalizeId = (v) => {
+  if (v == null) return null;
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') return Number(v);
+
+  // 常见后端返回：{id: 29} / {value: 29} / Long {low, high} / 带 toNumber()
+  if (typeof v === 'object') {
+    if (v.id != null) return Number(v.id);
+    if (v.value != null) return Number(v.value);
+    if (typeof v.low === 'number') return Number(v.low);           // long.js/protobuf
+    if (typeof v.toNumber === 'function') return Number(v.toNumber());
+    if (typeof v.toString === 'function' && v.toString !== Object.prototype.toString) {
+      const n = Number(v.toString());
+      if (!Number.isNaN(n)) return n;
+    }
+  }
+  const n = Number(v);
+  return Number.isNaN(n) ? null : n;
+};
+
 const commentTab = ref('given')
 
 // 评论数据
@@ -193,71 +214,53 @@ const loadGivenComments = async () => {
     loading.value = true
     const response = await commentApi.getGivenComments(currentUser.value.id)
     if (response && response.code === 0 && response.data) {
-      const list = response.data
+      const list = (response.data || []).map(c => ({
+        ...c,
+        _id: normalizeId(c.id),
+        _pid: normalizeId(c.parentCommentId),
+      }));
 
-      // 去重（保留首个）
-      const unique = list.filter((c, i, self) => i === self.findIndex(x => String(x.id) === String(c.id)))
+      const seen = new Set();
+      const unique = list.filter(c => {
+        const k = c._id ?? c.id;
+        if (seen.has(k)) return false;
+        seen.add(k); return true;
+      });
 
-      // 按 parentCommentId 是否为空拆分
-      const topLevel = unique.filter(c => {
-        const pid = c.parentCommentId
-        return pid == null || pid === '' || (typeof pid === 'object' && !pid.id)
-      })
-
-      // 建 parentId -> replies 映射（统一用 String 做 key）
-      const repliesMap = new Map()
+      const top = unique.filter(c => c._pid == null);
+      const byParent = new Map();
       unique.forEach(c => {
-        const pid = c.parentCommentId
-        if (pid != null && pid !== '') {
-          // 处理 parentCommentId 可能是 object 的情况
-          let actualPid
-          if (typeof pid === 'object' && pid.id) {
-            actualPid = pid.id
-          } else if (typeof pid === 'object') {
-            // 如果 object 没有 id 字段，尝试其他可能的字段
-            actualPid = pid.commentId || pid.parentId || pid._id || null
-          } else {
-            actualPid = pid
-          }
-          
-          if (actualPid != null) {
-            const key = String(actualPid)
-            if (!repliesMap.has(key)) repliesMap.set(key, [])
-            repliesMap.get(key).push(c)
-          }
+        if (c._pid != null) {
+          if (!byParent.has(c._pid)) byParent.set(c._pid, []);
+          byParent.get(c._pid).push(c);
         }
-      })
+      });
 
-      // 组装：给每个顶层评论挂上 replies（注意返回新对象，确保响应式）
-      givenComments.value = topLevel
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      givenComments.value = top
+        .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))
         .map(c => ({
-          id: c.id,
+          id: c._id,
           date: c.createdAt,
           text: c.content,
-          // 加上这两行，保留目标
           toEventId: c.toEventId ?? null,
           toOrganizerId: c.toOrganizerId ?? null,
-          target: c.toEventId ? `Event ID: ${c.toEventId}` : 
+          target: c.toEventId ? `Event ID: ${c.toEventId}` :
                   c.toOrganizerId ? `Organizer ID: ${c.toOrganizerId}` : 'Unknown Target',
-          replies: (repliesMap.get(String(c.id)) || [])
-            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-            .map(reply => ({
-              id: reply.id,
-              date: reply.createdAt,
-              text: reply.content,
-              fromUserName: reply.fromUserName,
-              fromUserType: reply.fromUserType
+          replies: (byParent.get(c._id) || [])
+            .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))
+            .map(r => ({
+              id: r._id,
+              date: r.createdAt,
+              text: r.content,
+              fromUserName: r.fromUserName,
+              fromUserType: r.fromUserType,
             }))
-        }))
+        }));
 
-      // 调试：确认类型和实际值
+      // 调试：确认规范化是否成功
       console.table(unique.map(c => ({
-        id: c.id, 
-        pid: c.parentCommentId,
-        pidValue: typeof c.parentCommentId === 'object' ? JSON.stringify(c.parentCommentId) : c.parentCommentId,
-        types: `${typeof c.id}/${typeof c.parentCommentId}`
-      })))
+        id: c.id, _id: c._id, pid: c.parentCommentId, _pid: c._pid
+      })));
     } else {
       givenComments.value = []
     }
@@ -277,73 +280,53 @@ const loadReceivedComments = async () => {
     loading.value = true
     const response = await commentApi.getReceivedComments(currentUser.value.id)
     if (response && response.code === 0 && response.data) {
-      const list = response.data
+      const list = (response.data || []).map(c => ({
+        ...c,
+        _id: normalizeId(c.id),
+        _pid: normalizeId(c.parentCommentId),
+      }));
 
-      // 去重
-      const unique = list.filter((c, i, self) => i === self.findIndex(x => String(x.id) === String(c.id)))
+      const seen = new Set();
+      const unique = list.filter(c => {
+        const k = c._id ?? c.id;
+        if (seen.has(k)) return false;
+        seen.add(k); return true;
+      });
 
-      // 拆分顶层/回复
-      const topLevel = unique.filter(c => {
-        const pid = c.parentCommentId
-        return pid == null || pid === '' || (typeof pid === 'object' && !pid.id)
-      })
-      
-      const repliesMap = new Map()
+      const top = unique.filter(c => c._pid == null);
+      const byParent = new Map();
       unique.forEach(c => {
-        const pid = c.parentCommentId
-        if (pid != null && pid !== '') {
-          // 处理 parentCommentId 可能是 object 的情况
-          let actualPid
-          if (typeof pid === 'object' && pid.id) {
-            actualPid = pid.id
-          } else if (typeof pid === 'object') {
-            // 如果 object 没有 id 字段，尝试其他可能的字段
-            actualPid = pid.commentId || pid.parentId || pid._id || null
-          } else {
-            actualPid = pid
-          }
-          
-          if (actualPid != null) {
-            const key = String(actualPid)
-            if (!repliesMap.has(key)) repliesMap.set(key, [])
-            repliesMap.get(key).push(c)
-          }
+        if (c._pid != null) {
+          if (!byParent.has(c._pid)) byParent.set(c._pid, []);
+          byParent.get(c._pid).push(c);
         }
-      })
+      });
 
-      // 组装（保留目标）
-      receivedComments.value = topLevel
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      receivedComments.value = top
+        .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))
         .map(c => ({
-          id: c.id,
+          id: c._id,
           date: c.createdAt,
           text: c.content,
           author: c.fromUserName || `User ID: ${c.fromUserId}`,
           authorType: c.fromUserType,
           hasPurchased: c.hasPurchased,
-          // 关键：保留目标，供回复用
           toEventId: c.toEventId ?? null,
           toOrganizerId: c.toOrganizerId ?? null,
-
-          replies: (repliesMap.get(String(c.id)) || [])
-            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+          replies: (byParent.get(c._id) || [])
+            .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))
             .map(r => ({
-              id: r.id,
+              id: r._id,
               content: r.content,
               createdAt: r.createdAt,
               fromUserName: r.fromUserName,
               fromUserType: r.fromUserType
             }))
-        }))
+        }));
 
       console.table(unique.map(c => ({
-        id: c.id,
-        pid: c.parentCommentId,
-        pidValue: typeof c.parentCommentId === 'object' ? JSON.stringify(c.parentCommentId) : c.parentCommentId,
-        types: `${typeof c.id}/${typeof c.parentCommentId}`,
-        toEventId: c.toEventId,
-        toOrganizerId: c.toOrganizerId
-      })))
+        id: c.id, _id: c._id, pid: c.parentCommentId, _pid: c._pid
+      })));
     } else {
       receivedComments.value = []
     }
@@ -413,7 +396,7 @@ const submitReply = async (commentId) => {
       toEventId: parent?.toEventId ?? null,
       toOrganizerId: parent?.toOrganizerId ?? null,
       rating: null,
-      parentCommentId: Number(commentId)
+      parentCommentId: Number(normalizeId(commentId)) // 关键：用规范化后的 ID
     }
 
     console.log('[OrganizerCommentView] Reply comment data:', commentData)

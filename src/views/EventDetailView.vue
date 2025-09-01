@@ -270,6 +270,27 @@ const router = useRouter()
 const { isAuthenticated, currentUser } = useAuth()
 const { getEventById, isLoading, error } = useEvent()
 
+// 把各种可能的 id / parentId 统一成 number，避免 number/object 不匹配
+const normalizeId = (v) => {
+  if (v == null) return null;
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') return Number(v);
+
+  // 常见后端返回：{id: 29} / {value: 29} / Long {low, high} / 带 toNumber()
+  if (typeof v === 'object') {
+    if (v.id != null) return Number(v.id);
+    if (v.value != null) return Number(v.value);
+    if (typeof v.low === 'number') return Number(v.low);           // long.js/protobuf
+    if (typeof v.toNumber === 'function') return Number(v.toNumber());
+    if (typeof v.toString === 'function' && v.toString !== Object.prototype.toString) {
+      const n = Number(v.toString());
+      if (!Number.isNaN(n)) return n;
+    }
+  }
+  const n = Number(v);
+  return Number.isNaN(n) ? null : n;
+};
+
 const event = ref(null)
 const isFollowing = ref(false)
 const isBookmarked = ref(false)
@@ -626,7 +647,7 @@ const submitReply = async (commentId) => {
       toEventId: Number(event.value.id),
       toOrganizerId: null, // null when replying to event comment
       rating: null, // not set rating
-      parentCommentId: Number(commentId) // 关键：转成 number
+      parentCommentId: Number(normalizeId(commentId)) // 关键：用规范化后的 ID
     }
     
     console.log('[EventDetailView] Reply comment data:', commentData)
@@ -665,55 +686,45 @@ const loadComments = async (eventId) => {
     console.log('[EventDetailView] Comments response:', commentsResponse)
     
     if (commentsResponse && commentsResponse.code === 0 && commentsResponse.data) {
-      const list = commentsResponse.data
+      // 统一 id / parentId
+      const rows = commentsResponse.data.map(c => ({
+        ...c,
+        _id: normalizeId(c.id),
+        _pid: normalizeId(c.parentCommentId),
+      }));
 
-      // 去重（保留首个）
-      const unique = list.filter((c, i, self) => i === self.findIndex(x => String(x.id) === String(c.id)))
+      // 去重
+      const seen = new Set();
+      const unique = rows.filter(c => {
+        const key = c._id ?? c.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
 
-      // 按 parentCommentId 是否为空拆分
-      const topLevel = unique.filter(c => {
-        const pid = c.parentCommentId
-        return pid == null || pid === '' || (typeof pid === 'object' && !pid.id)
-      })
-
-      // 建 parentId -> replies 映射（统一用 String 做 key）
-      const repliesMap = new Map()
+      // 顶层 / 回复映射
+      const top = unique.filter(c => c._pid == null);
+      const byParent = new Map();
       unique.forEach(c => {
-        const pid = c.parentCommentId
-        if (pid != null && pid !== '') {
-          // 处理 parentCommentId 可能是 object 的情况
-          let actualPid
-          if (typeof pid === 'object' && pid.id) {
-            actualPid = pid.id
-          } else if (typeof pid === 'object') {
-            // 如果 object 没有 id 字段，尝试其他可能的字段
-            actualPid = pid.commentId || pid.parentId || pid._id || null
-          } else {
-            actualPid = pid
-          }
-          
-          if (actualPid != null) {
-            const key = String(actualPid)
-            if (!repliesMap.has(key)) repliesMap.set(key, [])
-            repliesMap.get(key).push(c)
-          }
+        if (c._pid != null) {
+          if (!byParent.has(c._pid)) byParent.set(c._pid, []);
+          byParent.get(c._pid).push(c);
         }
-      })
+      });
 
-      // 组装：给每个顶层评论挂上 replies（注意返回新对象，确保响应式）
-      comments.value = topLevel
+      // 组装（注意返回新对象，保持响应式）
+      comments.value = top
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
         .map(c => ({
           ...c,
-          replies: (repliesMap.get(String(c.id)) || [])
+          replies: (byParent.get(c._id) || [])
             .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-        }))
+        }));
 
-      // 调试：确认类型
+      // 调试：确认规范化是否成功
       console.table(unique.map(c => ({
-        id: c.id, pid: c.parentCommentId,
-        types: `${typeof c.id}/${typeof c.parentCommentId}`
-      })))
+        id: c.id, _id: c._id, pid: c.parentCommentId, _pid: c._pid
+      })));
       
       console.log('[EventDetailView] Loaded comments with replies:', comments.value)
     } else {
