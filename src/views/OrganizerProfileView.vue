@@ -116,6 +116,34 @@
                       </button>
                     </div>
                   </div>
+                  
+                  <!-- 显示回复评论 -->
+                  <div v-if="comment.replies && comment.replies.length > 0" class="replies-section">
+                    <div 
+                      v-for="reply in comment.replies" 
+                      :key="reply.id" 
+                      class="reply-item"
+                    >
+                      <div class="reply-header">
+                        <span class="reply-author">
+                          {{ reply.fromUserName || 'Anonymous' }}
+                          <span v-if="reply.fromUserType === 'ORGANIZER' || reply.fromUserType === 'organizer'" class="user-badge organizer-badge">Organizer</span>
+                          <span v-if="reply.hasPurchased" class="user-badge purchaser-badge">Purchased</span>
+                        </span>
+                        <span class="reply-date">{{ formatDate(reply.createdAt) }}</span>
+                      </div>
+                      <p class="reply-text">{{ reply.content }}</p>
+                      <div class="reply-actions">
+                        <button 
+                          v-if="reply.fromUserId === currentUser?.id"
+                          class="delete-button"
+                          @click="deleteComment(reply.id)"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -379,8 +407,18 @@ const loadComments = async (organizerId) => {
       const uniqueComments = commentsResponse.data.filter((comment, index, self) => 
         index === self.findIndex(c => c.id === comment.id)
       )
-      comments.value = uniqueComments
-      console.log('[OrganizerProfileView] Loaded comments:', comments.value)
+      
+      // 组织评论层级结构
+      const topLevelComments = uniqueComments.filter(comment => !comment.parentCommentId)
+      const replyComments = uniqueComments.filter(comment => comment.parentCommentId)
+      
+      // 将回复添加到对应的父评论下
+      topLevelComments.forEach(comment => {
+        comment.replies = replyComments.filter(reply => reply.parentCommentId === comment.id)
+      })
+      
+      comments.value = topLevelComments
+      console.log('[OrganizerProfileView] Loaded comments with replies:', comments.value)
     } else {
       console.log('[OrganizerProfileView] No comments found or error:', commentsResponse)
       comments.value = []
@@ -1563,5 +1601,56 @@ const handleImageError = (event) => {
 
 .cancel-reply-btn:hover {
   background-color: #b91c1c;
+}
+
+/* 回复评论显示样式 */
+.replies-section {
+  margin-top: 1rem;
+  padding-left: 2rem;
+  border-left: 2px solid #e5e7eb;
+}
+
+.reply-item {
+  background-color: #f9fafb;
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.reply-author {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reply-date {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.reply-text {
+  color: #4b5563;
+  line-height: 1.4;
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.reply-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 </style> 

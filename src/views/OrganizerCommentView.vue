@@ -98,33 +98,50 @@
                   </button>
                 </div>
                 
-                <!-- 回复输入框 -->
-                <div v-if="String(replyingTo) === String(comment.id)" class="reply-input-section">
-                  <textarea 
-                    v-model="replyContent" 
-                    placeholder="Write your reply here..."
-                    class="reply-input"
-                    rows="3"
-                  ></textarea>
-                  <div class="reply-actions">
-                    <button 
-                      class="submit-reply-btn" 
-                      @click="submitReply(comment.id)"
-                      :disabled="isSubmittingReply"
+                                  <!-- 回复输入框 -->
+                  <div v-if="String(replyingTo) === String(comment.id)" class="reply-input-section">
+                    <textarea 
+                      v-model="replyContent" 
+                      placeholder="Write your reply here..."
+                      class="reply-input"
+                      rows="3"
+                    ></textarea>
+                    <div class="reply-actions">
+                      <button 
+                        class="submit-reply-btn" 
+                        @click="submitReply(comment.id)"
+                        :disabled="isSubmittingReply"
+                      >
+                        {{ isSubmittingReply ? 'Submitting...' : 'Submit Reply' }}
+                      </button>
+                      <button 
+                        class="cancel-reply-btn" 
+                        @click="cancelReply"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- 显示回复评论 -->
+                  <div v-if="comment.replies && comment.replies.length > 0" class="replies-section">
+                    <div 
+                      v-for="reply in comment.replies" 
+                      :key="reply.id" 
+                      class="reply-item"
                     >
-                      {{ isSubmittingReply ? 'Submitting...' : 'Submit Reply' }}
-                    </button>
-                    <button 
-                      class="cancel-reply-btn" 
-                      @click="cancelReply"
-                    >
-                      Cancel
-                    </button>
+                      <div class="reply-header">
+                        <span class="reply-author">
+                          {{ reply.fromUserName || 'Anonymous' }}
+                        </span>
+                        <span class="reply-date">{{ formatDate(reply.createdAt) }}</span>
+                      </div>
+                      <p class="reply-text">{{ reply.content }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
         </div>
       </div>
     </main>
@@ -159,12 +176,22 @@ const loadGivenComments = async () => {
     loading.value = true
     const response = await commentApi.getGivenComments(currentUser.value.id)
     if (response && response.code === 0 && response.data) {
-      givenComments.value = response.data.map(comment => ({
+      // 组织评论层级结构
+      const topLevelComments = response.data.filter(comment => !comment.parentCommentId)
+      const replyComments = response.data.filter(comment => comment.parentCommentId)
+      
+      // 将回复添加到对应的父评论下
+      topLevelComments.forEach(comment => {
+        comment.replies = replyComments.filter(reply => reply.parentCommentId === comment.id)
+      })
+      
+      givenComments.value = topLevelComments.map(comment => ({
         id: comment.id,
         date: comment.createdAt,
         text: comment.content,
         target: comment.toEventId ? `Event ID: ${comment.toEventId}` : 
-                comment.toOrganizerId ? `Organizer ID: ${comment.toOrganizerId}` : 'Unknown Target'
+                comment.toOrganizerId ? `Organizer ID: ${comment.toOrganizerId}` : 'Unknown Target',
+        replies: comment.replies || []
       }))
     } else {
       givenComments.value = []
