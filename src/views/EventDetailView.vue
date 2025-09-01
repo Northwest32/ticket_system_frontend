@@ -622,11 +622,11 @@ const submitReply = async (commentId) => {
     // 创建回复评论
     const commentData = {
       content: replyContent.value.trim(),
-      fromUserId: currentUser.value.id,
-      toEventId: event.value.id,
+      fromUserId: Number(currentUser.value.id),
+      toEventId: Number(event.value.id),
       toOrganizerId: null, // null when replying to event comment
       rating: null, // not set rating
-      parentCommentId: commentId // 设置父评论ID，表示这是回复
+      parentCommentId: Number(commentId) // 关键：转成 number
     }
     
     console.log('[EventDetailView] Reply comment data:', commentData)
@@ -665,26 +665,41 @@ const loadComments = async (eventId) => {
     console.log('[EventDetailView] Comments response:', commentsResponse)
     
     if (commentsResponse && commentsResponse.code === 0 && commentsResponse.data) {
-      // Remove duplicates by ID
-      const uniqueComments = commentsResponse.data.filter((comment, index, self) => 
-        index === self.findIndex(c => c.id === comment.id)
-      )
-      
-      // 组织评论层级结构
-      const topLevelComments = uniqueComments.filter(comment => !comment.parentCommentId)
-      const replyComments = uniqueComments.filter(comment => comment.parentCommentId)
-      
-      // 将回复添加到对应的父评论下
-      topLevelComments.forEach(comment => {
-        comment.replies = replyComments.filter(reply => reply.parentCommentId === comment.id)
+      const list = commentsResponse.data
+
+      // 去重（保留首个）
+      const unique = list.filter((c, i, self) => i === self.findIndex(x => String(x.id) === String(c.id)))
+
+      // 按 parentCommentId 是否为空拆分
+      const topLevel = unique.filter(c => c.parentCommentId == null || String(c.parentCommentId) === '')
+
+      // 建 parentId -> replies 映射（统一用 String 做 key）
+      const repliesMap = new Map()
+      unique.forEach(c => {
+        const pid = c.parentCommentId
+        if (pid != null && String(pid) !== '') {
+          const key = String(pid)
+          if (!repliesMap.has(key)) repliesMap.set(key, [])
+          repliesMap.get(key).push(c)
+        }
       })
+
+      // 组装：给每个顶层评论挂上 replies（注意返回新对象，确保响应式）
+      comments.value = topLevel
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map(c => ({
+          ...c,
+          replies: (repliesMap.get(String(c.id)) || [])
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        }))
+
+      // 调试：确认类型
+      console.table(unique.map(c => ({
+        id: c.id, pid: c.parentCommentId,
+        types: `${typeof c.id}/${typeof c.parentCommentId}`
+      })))
       
-      comments.value = topLevelComments
       console.log('[EventDetailView] Loaded comments with replies:', comments.value)
-      // Debug: Check each comment's fromUserType and replies
-      comments.value.forEach((comment, index) => {
-        console.log(`[EventDetailView] Comment ${index}: fromUserName=${comment.fromUserName}, fromUserType=${comment.fromUserType}, replies=${comment.replies?.length || 0}`)
-      })
     } else {
       console.log('[EventDetailView] No comments found or error:', commentsResponse)
       comments.value = []
