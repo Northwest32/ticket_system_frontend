@@ -218,7 +218,7 @@ const loadGivenComments = async () => {
       console.table(unique.map(c => ({
         id: c.id, pid: c.parentCommentId,
         types: `${typeof c.id}/${typeof c.parentCommentId}`
-      }))
+      })))
     } else {
       givenComments.value = []
     }
