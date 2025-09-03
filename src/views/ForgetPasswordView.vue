@@ -20,17 +20,6 @@
               />
             </div>
             
-            <div class="form-group">
-              <label for="email" class="form-label">Email</label>
-              <input
-                id="email"
-                v-model="email"
-                type="email"
-                class="form-input"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
             
             <div class="form-group">
               <label for="newPassword" class="form-label">New Password</label>
